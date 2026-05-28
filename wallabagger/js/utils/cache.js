@@ -1,5 +1,7 @@
 'use strict';
 
+import { encodeToBase64 } from './sanitize.js';
+
 class Cache {
     #cache = null;
     #enabled = false;
@@ -30,7 +32,7 @@ class Cache {
     }
 
     #str (some) {
-        return btoa(some);
+        return encodeToBase64(some);
     }
 }
 

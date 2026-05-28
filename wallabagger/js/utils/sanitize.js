@@ -26,4 +26,10 @@ const sanitize = (param) => {
     return param.replace(propRegExp, match => encodeStr(match));
 };
 
-export { decodeStr, sanitize };
+const encodeToBase64 = (str) => {
+    var encoder = new TextEncoder();
+    var utf8Bytes = encoder.encode(str);
+    return btoa(String.fromCharCode(...utf8Bytes));
+};
+
+export { decodeStr, encodeToBase64, sanitize };
