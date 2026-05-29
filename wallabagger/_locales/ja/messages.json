@@ -164,7 +164,7 @@
         "description": "Background"
     },
     "Remove_this_article_from_Wallabag": {
-        "message": "Wallabag からこの記事を削除",
+        "message": "wallabag からこの記事を削除",
         "description": "Popup"
     },
     "Reset_parameters": {
@@ -192,11 +192,11 @@
         "description": "background"
     },
     "Set_this_article_as_archived_into_Wallabag": {
-        "message": "Wallabag でこの記事をアーカイブ",
+        "message": "wallabag でこの記事をアーカイブ",
         "description": "Popup"
     },
     "Set_this_article_as_starred_into_Wallabag": {
-        "message": "Wallabag でこの記事をお気に入りに登録",
+        "message": "wallabag でこの記事をお気に入りに登録",
         "description": "Popup"
     },
     "Starred": {
@@ -224,11 +224,11 @@
         "description": "background"
     },
     "Unset_this_article_as_archived_into_Wallabag": {
-        "message": "Wallabag でのこの記事のアーカイブを解除",
+        "message": "wallabag でのこの記事のアーカイブを解除",
         "description": "Popup"
     },
     "Unset_this_article_as_starred_into_Wallabag": {
-        "message": "Wallabag でのこの記事のお気に入り登録を解除",
+        "message": "wallabag でのこの記事のお気に入り登録を解除",
         "description": "Popup"
     },
     "Use_HTTPS": {
@@ -244,15 +244,15 @@
         "description": "Options"
     },
     "Wallabag_API_token": {
-        "message": "Wallabag API トークン",
+        "message": "wallabag API トークン",
         "description": "Options"
     },
     "Wallabag_permission_checked": {
-        "message": "Wallabag の権限の確認状況",
+        "message": "wallabag の権限の確認状況",
         "description": "Options"
     },
     "Wallabag_API_version": {
-        "message": "Wallabag API バージョン",
+        "message": "wallabag API バージョン",
         "description": "Options"
     },
     "Wallabag_it": {
@@ -264,11 +264,11 @@
         "description": "Manifest.json"
     },
     "Wallabag_URL": {
-        "message": "Wallabag URL",
+        "message": "wallabag URL",
         "description": "Options"
     },
     "Wallabag_URL_checked": {
-        "message": "Wallabag URL の確認状況",
+        "message": "wallabag URL の確認状況",
         "description": "Options"
     },
     "We_need_an_access_to_your_wallabag_instance_to_read_write_and_update_content_Please_test_the_URL_again_and_accept_the_permission_request": {

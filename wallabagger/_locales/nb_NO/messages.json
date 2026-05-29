@@ -188,7 +188,7 @@
         "description": "Options"
     },
     "Extension_description": {
-        "message": "Denne wallabag v2-utvidelse har muligheten til å redigere tittel og stikkord, angi stjernemerke, og sette tilstand til arkivert eller slettet.",
+        "message": "Lagre nettadresser og innhold fra alle sider til en Wallabag v2-server for senere lesing, med redigerbare metadata.",
         "description": "Manifest.json"
     },
     "No_leave_it": {
@@ -306,5 +306,44 @@
     "We_need_an_access_to_your_wallabag_instance_to_read_write_and_update_content_Please_test_the_URL_again_and_accept_the_permission_request": {
         "message": "Vi trenger tilgang til wallabag-instansen din for å lese, skrive og oppdatere innhold. Vennligst test URL-en på nytt og godta forespørselen.",
         "description": "Options"
+    },
+    "Error_empty_data": {
+        "message": "Feil: Ingen data funnet!"
+    },
+    "First_you_need_to_create_a_new_client_Then_you_need_to_try_again": {
+        "message": "Først må du opprette <a href=\"%URL%\" target=\"_blank\">en ny klientt</a>. Deretter må du prøve på nytt."
+    },
+    "Saving_the_page_to_wallabag_from_the_browser": {
+        "message": ""
+    },
+    "Sites_locally_always_fetch_title": {
+        "message": "Alle nettsidene"
+    },
+    "You_need_to_be_logged_in_your_wallabag_Then_you_need_to_try_again": {
+        "message": "Du må være logget inn på <a href=\"%URL%\" target=\"_blank\">din wallabag</a>. Prøv deretter på nytt."
+    },
+    "Service_pages_can_t_be_stored": {
+        "message": ""
+    },
+    "Sites_locally_always_fetch_explaination": {
+        "message": ""
+    },
+    "Indicate_if_page_already_saved_into_wallabag_the_wallabagger_icon_is_green": {
+        "message": "Vis om siden allerede er lagret (wallabagger-ikonet blir grønt)"
+    },
+    "Sites_locally_whitelist_fetch_title": {
+        "message": ""
+    },
+    "Or_you_can_click_here_to_fill_in_the_credentials_manually": {
+        "message": ""
+    },
+    "Pick_a_client": {
+        "message": "Velg en klient"
+    },
+    "Sites_locally_fetch_general_explaination": {
+        "message": ""
+    },
+    "Sites_locally_whitelist_fetch_explaination": {
+        "message": ""
     }
 }
