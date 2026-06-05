@@ -314,7 +314,7 @@
         "message": "Først må du opprette <a href=\"%URL%\" target=\"_blank\">en ny klientt</a>. Deretter må du prøve på nytt."
     },
     "Saving_the_page_to_wallabag_from_the_browser": {
-        "message": ""
+        "message": "Lagrer sideinnholdet i nettleseren til wallabag…"
     },
     "Sites_locally_always_fetch_title": {
         "message": "Alle nettsidene"
@@ -326,16 +326,16 @@
         "message": ""
     },
     "Sites_locally_always_fetch_explaination": {
-        "message": ""
+        "message": "Ønsker du å sende innholdet fra alle nettsteder i nettleseren til wallabag? Krysse av i denne boksen."
     },
     "Indicate_if_page_already_saved_into_wallabag_the_wallabagger_icon_is_green": {
         "message": "Vis om siden allerede er lagret (wallabagger-ikonet blir grønt)"
     },
     "Sites_locally_whitelist_fetch_title": {
-        "message": ""
+        "message": "Hvitliste"
     },
     "Or_you_can_click_here_to_fill_in_the_credentials_manually": {
-        "message": ""
+        "message": "Eller du kan klikke her for å legge inn påloggingsdetaljene manuelt"
     },
     "Pick_a_client": {
         "message": "Velg en klient"
@@ -344,6 +344,6 @@
         "message": ""
     },
     "Sites_locally_whitelist_fetch_explaination": {
-        "message": ""
+        "message": "Oppgi adressen til nettstedet der du alltid vil sende innholdet fra nettleseren, i stedet for kun nettsidens URL."
     }
 }
