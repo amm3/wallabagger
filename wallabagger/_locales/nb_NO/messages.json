@@ -323,7 +323,7 @@
         "message": "Du må være logget inn på <a href=\"%URL%\" target=\"_blank\">din wallabag</a>. Prøv deretter på nytt."
     },
     "Service_pages_can_t_be_stored": {
-        "message": ""
+        "message": "Tjenestesidene kan ikke bli lagret"
     },
     "Sites_locally_always_fetch_explaination": {
         "message": "Ønsker du å sende innholdet fra alle nettsteder i nettleseren til wallabag? Krysse av i denne boksen."
@@ -341,7 +341,7 @@
         "message": "Velg en klient"
     },
     "Sites_locally_fetch_general_explaination": {
-        "message": ""
+        "message": "Noen ganger har ikke wallabag tilgang til innholdet du prøver å lagre. Det kan være et nettsted som krever innlogging, eller som bruker JavaScript for å vise innholdet. Denne funksjonen gir deg muligheten til å sende innholdet du har foran deg i nettleseren, slik at wallabag slipper å gjøre noe annet enn å lagre det du sender."
     },
     "Sites_locally_whitelist_fetch_explaination": {
         "message": "Oppgi adressen til nettstedet der du alltid vil sende innholdet fra nettleseren, i stedet for kun nettsidens URL."
