@@ -92,7 +92,7 @@
         "description": "Options"
     },
     "Extension_description": {
-        "message": "这个wallabag v2扩展可以编辑标题和标签，并设置星号、存档或删除状态。",
+        "message": "保存任意页面的 URL 和内容到 Wallabag v2 服务器以便之后阅读，带可编辑的元数据。",
         "description": "Manifest.json"
     },
     "Get_token": {
