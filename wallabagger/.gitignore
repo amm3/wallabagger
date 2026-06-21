@@ -1,0 +1,15 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.claude/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Chrome extension metadata (from Web Store, not needed for dev)
+_metadata/
+

@@ -1,348 +1,348 @@
 {
-    "Agreed": {
-        "message": "Einverstanden",
-        "description": "Options"
-    },
-    "All_entries": {
-        "message": "Alle Artikel",
-        "description": "background"
-    },
-    "Allow_Space_in_tags_this_disables_Space_as_send_tags_key_use_Enter_key_instead": {
-        "message": "Leerzeichen in Tags zulassen (dies deaktiviert Space als Sende-Tags-Taste, verwenden Sie stattdessen die Enter-Taste)",
-        "description": "Options"
-    },
-    "Archive": {
-        "message": "Archiv",
-        "description": "background"
-    },
-    "Article_s_link": {
-        "message": "Artikellink",
-        "description": "Popup"
-    },
-    "Article_s_title": {
-        "message": "Artikeltitel",
-        "description": "Popup"
-    },
-    "Auto_add_single_tag": {
-        "message": "Einzelnes Tag automatisch hinzufügen",
-        "description": "Options"
-    },
-    "Cancel": {
-        "message": "Abbrechen",
-        "description": "Popup"
-    },
-    "Check_URL": {
-        "message": "URL prüfen",
-        "description": "Options"
-    },
-    "Checklist": {
-        "message": "Checkliste",
-        "description": "Options"
-    },
-    "Client_ID": {
-        "message": "Client ID",
-        "description": "Options"
-    },
-    "Client_secret": {
-        "message": "Client Secret",
-        "description": "Options"
-    },
-    "day_many": {
-        "message": "Tage",
-        "description": "Options"
-    },
-    "day_one": {
-        "message": "Tag",
-        "description": "Options"
-    },
-    "Delete_this_article": {
-        "message": "Diesen Artikel löschen",
-        "description": "Popup"
-    },
-    "Denied": {
-        "message": "Abgelehnt",
-        "description": "Options"
-    },
-    "Do_you_want_to_remove_this_article_permanently_from_wallabag": {
-        "message": "Möchten Sie diesen Artikel dauerhaft aus wallabag entfernen?",
-        "description": "Popup"
-    },
-    "Download_file": {
-        "message": "Datei herunterladen",
-        "description": "Options"
-    },
-    "Due_to_security_reason_we_allow_this_option_only_for_HTTPS_protocol": {
-        "message": "Aus Sicherheitsgründen ist diese Option nur für HTTPS-Protokoll erlaubt",
-        "description": "Options"
-    },
-    "Edit_the_Wallabag_title_of_this_article": {
-        "message": "Wallabag-Titel dieses Artikels bearbeiten",
-        "description": "Popup"
-    },
-    "Enable_this_only_if_developers_told_you_to": {
-        "message": "Aktivieren Sie diese Option nur, wenn ein Entwickler Sie dazu auffordert",
-        "description": "Options"
-    },
-    "Enter_your_tags_here": {
-        "message": "Geben Sie hier Ihre Tags ein",
-        "description": "Popup"
-    },
-    "Expired": {
-        "message": "Abgelaufen",
-        "description": "Options"
-    },
-    "Extension_description": {
-        "message": "Speichert URL und Inhalt einer Seite auf einem Wallabag v2‑Server zum späteren Lesen; Metadaten können bearbeitet werden.",
-        "description": "Manifest.json"
-    },
-    "Get_token": {
-        "message": "Token holen",
-        "description": "Options"
-    },
-    "Go_to_this_article_page": {
-        "message": "Gehe zu dieser Artikelseite",
-        "description": "Popup"
-    },
-    "Go_to_Wallabag_s_article_page": {
-        "message": "Gehe zu wallabags Artikelseite",
-        "description": "Popup"
-    },
-    "Granted": {
-        "message": "Zugestimmt",
-        "description": "Options"
-    },
-    "hour_many": {
-        "message": "Stunden",
-        "description": "Options"
-    },
-    "hour_one": {
-        "message": "Stunde",
-        "description": "Options"
-    },
-    "Indicate_if_page_already_saved_this_sends_URL_of_each_tab_to_wallabag_use_HTTPS_protocol_for_better_security": {
-        "message": "Anzeigen, ob die Seite bereits gespeichert ist (dies sendet die URL jedes Tabs an Wallabag, verwenden Sie das HTTPS-Protokoll für mehr Sicherheit!)",
-        "description": "Options"
-    },
-    "Load_from_file": {
-        "message": "Laden aus Datei",
-        "description": "Options"
-    },
-    "Loading_wallabag_API": {
-        "message": "Lade wallabag-API…",
-        "description": "Popup"
-    },
-    "minute_many": {
-        "message": "Minuten",
-        "description": "Options"
-    },
-    "minute_one": {
-        "message": "Minute",
-        "description": "Options"
-    },
-    "No_leave_it": {
-        "message": "Nein, lass es sein",
-        "description": "Popup"
-    },
-    "Not_checked": {
-        "message": "Nicht geprüft",
-        "description": "Options"
-    },
-    "Not_granted": {
-        "message": "Nicht zugestimmt",
-        "description": "Options"
-    },
-    "Ok": {
-        "message": "OK",
-        "description": "Options"
-    },
-    "Ok_I_understand": {
-        "message": "OK, ich hab's verstanden",
-        "description": "Options"
-    },
-    "Options_not_defined": {
-        "message": "Wallabagger nicht konfiguriert",
-        "description": "Background"
-    },
-    "Remove_this_article_from_Wallabag": {
-        "message": "Diesen Artikel aus wallabag löschen",
-        "description": "Popup"
-    },
-    "Reset_parameters": {
-        "message": "Parameter zurücksetzen",
-        "description": "Options"
-    },
-    "Save": {
-        "message": "Speichern",
-        "description": "Popup"
-    },
-    "Save_Error": {
-        "message": "Beim Speichern des Artikels ist ein Fehler aufgetreten",
-        "description": "Background"
-    },
-    "Save_to_file": {
-        "message": "In Datei speichern",
-        "description": "Options"
-    },
-    "Saving_tags": {
-        "message": "Speichere Tags…",
-        "description": "Popup"
-    },
-    "Saving_the_page_to_wallabag": {
-        "message": "Speichere Seite in wallabag…",
-        "description": "background"
-    },
-    "Set_this_article_as_archived_into_Wallabag": {
-        "message": "Diesen Artikel in wallabag als gelesen markieren",
-        "description": "Popup"
-    },
-    "Set_this_article_as_starred_into_Wallabag": {
-        "message": "Diesen Artikel in wallabag als Favorit markieren",
-        "description": "Popup"
-    },
-    "Starred": {
-        "message": "Favoriten",
-        "description": "background"
-    },
-    "State": {
-        "message": "Status",
-        "description": "Options"
-    },
-    "Tag_already_exists": {
-        "message": "Tag existiert bereits",
-        "description": "Popup"
-    },
-    "Tags": {
-        "message": "Tags",
-        "description": "background"
-    },
-    "Tags_found": {
-        "message": "Gefundene Tags:",
-        "description": "Popup"
-    },
-    "Unread": {
-        "message": "Ungelesene",
-        "description": "background"
-    },
-    "Unset_this_article_as_archived_into_Wallabag": {
-        "message": "Diesen Artikel in wallabag als ungelesen markieren",
-        "description": "Popup"
-    },
-    "Unset_this_article_as_starred_into_Wallabag": {
-        "message": "Diesen Artikel in wallabag aus den Favoriten entfernen",
-        "description": "Popup"
-    },
-    "Use_HTTPS": {
-        "message": "Nutze HTTPS",
-        "description": "Options"
-    },
-    "User_login": {
-        "message": "Benutzer-Login",
-        "description": "Options"
-    },
-    "User_password": {
-        "message": "Benutzerpasswort",
-        "description": "Options"
-    },
-    "Wallabag_API_token": {
-        "message": "wallabag API Token",
-        "description": "Options"
-    },
-    "Wallabag_API_version": {
-        "message": "wallabag API Version",
-        "description": "Options"
-    },
-    "Wallabag_it": {
-        "message": "wallabag it!",
-        "description": "background"
-    },
-    "Wallabag_it_description": {
-        "message": "Seite in wallabag speichern, ohne das Popup zu öffnen",
-        "description": "Manifest.json"
-    },
-    "Wallabag_permission_checked": {
-        "message": "wallabag Berechtigungen geprüft",
-        "description": "Options"
-    },
-    "Wallabag_URL": {
-        "message": "wallabag URL",
-        "description": "Options"
-    },
-    "Wallabag_URL_checked": {
-        "message": "wallabag URL getestet",
-        "description": "Options"
-    },
-    "We_need_an_access_to_your_wallabag_instance_to_read_write_and_update_content_Please_test_the_URL_again_and_accept_the_permission_request": {
-        "message": "Wir benötigen Zugriff auf Ihre wallabag-Instanz zum Lesen, Schreiben und Aktualisieren von Inhalten. Bitte prüfen Sie die URL noch einmal und akzeptieren Sie die Anfrage.",
-        "description": "Options"
-    },
-    "Yes_delete_it": {
-        "message": "Ja, löschen",
-        "description": "Popup"
-    },
-    "You_can_find_your_credentials_here": {
-        "message": "Ihre Zugangsdaten finden Sie hier:",
-        "description": "Options"
-    },
-    "Archive_by_default_when_saving_page": {
-        "message": "Standardmäßig markieren Sie die Seite beim Speichern als gelesen",
-        "description": "Options"
-    },
-    "Fetch_from_the_browser": {
-        "message": "Inhalt aus dem Browser laden",
-        "description": "Options"
-    },
-    "Options": {
-        "message": "Optionen",
-        "description": "Options"
-    },
-    "Others": {
-        "message": "Andere",
-        "description": "Options"
-    },
-    "Settings": {
-        "message": "Einstellungen",
-        "description": "Options"
-    },
-    "First_you_need_to_create_a_new_client_Then_you_need_to_try_again": {
-        "message": "Zuerst musst du <a href=\"%URL%\" target=\"_blank\">einen neuen Client</a> anlegen. Dann musst du es nochmal versuchen."
-    },
-    "Pick_a_client": {
-        "message": "Wähle einen Client"
-    },
-    "Indicate_if_page_already_saved_into_wallabag_the_wallabagger_icon_is_green": {
-        "message": "Zeigt an, ob die Seite bereits gespeichert ist (das Wallabagger-Symbol ist grün)"
-    },
-    "Sites_locally_always_fetch_explaination": {
-        "message": "Du möchtest den Inhalt aller Websites aus dem Browser an wallabag senden? Aktiviere dieses Kontrollkästchen."
-    },
-    "Sites_locally_always_fetch_title": {
-        "message": "Alle Webseiten"
-    },
-    "Sites_locally_fetch_general_explaination": {
-        "message": "Manchmal kann wallabag nicht auf die Inhalte zugreifen, die du speichern möchtest. Möglicherweise handelt es sich um eine Website, für die eine Anmeldung erforderlich ist oder die JavaScript verwendet, um die Inhalte anzuzeigen. Mit dieser Funktion kannst du die Inhalte, die du gerade im Browser vor dir hast, senden, sodass wallabag nichts weiter tun muss, als die von dir gesendeten Inhalte zu speichern."
-    },
-    "Sites_locally_whitelist_fetch_title": {
-        "message": "Positivliste"
-    },
-    "Sites_locally_whitelist_fetch_explaination": {
-        "message": "Gib die Adresse der Website ein, für die du immer den Inhalt aus dem Browser senden möchtest, anstatt nur die URL."
-    },
-    "Error_empty_data": {
-        "message": "Fehler: keine Daten!"
-    },
-    "Or_you_can_click_here_to_fill_in_the_credentials_manually": {
-        "message": "Oder hier klicken um die Zugangsdaten manuell einzutragen"
-    },
-    "Service_pages_can_t_be_stored": {
-        "message": "Serviceseiten können nicht gespeichert werden"
-    },
-    "Fetch_by_default_when_saving_page": {
-        "message": "Beim Speichern einer Seite immer den Inhalt des Browsers senden"
-    },
-    "You_need_to_be_logged_in_your_wallabag_Then_you_need_to_try_again": {
-        "message": "Du solltest auf <a href=\"%URL%\" target=\"_blank\">deinem wallabag</a> angemeldet sein. Danach bitte erneut versuchen."
-    },
-    "Saving_the_page_to_wallabag_from_the_browser": {
-        "message": "Speichere den Inhalt des Browsers auf wallabag…"
-    }
+   "Agreed": {
+      "description": "Options",
+      "message": "Einverstanden"
+   },
+   "All_entries": {
+      "description": "background",
+      "message": "Alle Artikel"
+   },
+   "Allow_Space_in_tags_this_disables_Space_as_send_tags_key_use_Enter_key_instead": {
+      "description": "Options",
+      "message": "Leerzeichen in Tags zulassen (dies deaktiviert Space als Sende-Tags-Taste, verwenden Sie stattdessen die Enter-Taste)"
+   },
+   "Archive": {
+      "description": "background",
+      "message": "Archiv"
+   },
+   "Archive_by_default_when_saving_page": {
+      "description": "Options",
+      "message": "Standardmäßig markieren Sie die Seite beim Speichern als gelesen"
+   },
+   "Article_s_link": {
+      "description": "Popup",
+      "message": "Artikellink"
+   },
+   "Article_s_title": {
+      "description": "Popup",
+      "message": "Artikeltitel"
+   },
+   "Auto_add_single_tag": {
+      "description": "Options",
+      "message": "Einzelnes Tag automatisch hinzufügen"
+   },
+   "Cancel": {
+      "description": "Popup",
+      "message": "Abbrechen"
+   },
+   "Check_URL": {
+      "description": "Options",
+      "message": "URL prüfen"
+   },
+   "Checklist": {
+      "description": "Options",
+      "message": "Checkliste"
+   },
+   "Client_ID": {
+      "description": "Options",
+      "message": "Client ID"
+   },
+   "Client_secret": {
+      "description": "Options",
+      "message": "Client Secret"
+   },
+   "Delete_this_article": {
+      "description": "Popup",
+      "message": "Diesen Artikel löschen"
+   },
+   "Denied": {
+      "description": "Options",
+      "message": "Abgelehnt"
+   },
+   "Do_you_want_to_remove_this_article_permanently_from_wallabag": {
+      "description": "Popup",
+      "message": "Möchten Sie diesen Artikel dauerhaft aus wallabag entfernen?"
+   },
+   "Download_file": {
+      "description": "Options",
+      "message": "Datei herunterladen"
+   },
+   "Due_to_security_reason_we_allow_this_option_only_for_HTTPS_protocol": {
+      "description": "Options",
+      "message": "Aus Sicherheitsgründen ist diese Option nur für HTTPS-Protokoll erlaubt"
+   },
+   "Edit_the_Wallabag_title_of_this_article": {
+      "description": "Popup",
+      "message": "Wallabag-Titel dieses Artikels bearbeiten"
+   },
+   "Enable_this_only_if_developers_told_you_to": {
+      "description": "Options",
+      "message": "Aktivieren Sie diese Option nur, wenn ein Entwickler Sie dazu auffordert"
+   },
+   "Enter_your_tags_here": {
+      "description": "Popup",
+      "message": "Geben Sie hier Ihre Tags ein"
+   },
+   "Error_empty_data": {
+      "message": "Fehler: keine Daten!"
+   },
+   "Expired": {
+      "description": "Options",
+      "message": "Abgelaufen"
+   },
+   "Extension_description": {
+      "description": "Manifest.json",
+      "message": "Speichert URL und Inhalt einer Seite auf einem Wallabag v2‑Server zum späteren Lesen; Metadaten können bearbeitet werden."
+   },
+   "Fetch_by_default_when_saving_page": {
+      "message": "Beim Speichern einer Seite immer den Inhalt des Browsers senden"
+   },
+   "Fetch_from_the_browser": {
+      "description": "Options",
+      "message": "Inhalt aus dem Browser laden"
+   },
+   "First_you_need_to_create_a_new_client_Then_you_need_to_try_again": {
+      "message": "Zuerst musst du \u003Ca href=\"%URL%\" target=\"_blank\">einen neuen Client\u003C/a> anlegen. Dann musst du es nochmal versuchen."
+   },
+   "Get_token": {
+      "description": "Options",
+      "message": "Token holen"
+   },
+   "Go_to_Wallabag_s_article_page": {
+      "description": "Popup",
+      "message": "Gehe zu wallabags Artikelseite"
+   },
+   "Go_to_this_article_page": {
+      "description": "Popup",
+      "message": "Gehe zu dieser Artikelseite"
+   },
+   "Granted": {
+      "description": "Options",
+      "message": "Zugestimmt"
+   },
+   "Indicate_if_page_already_saved_into_wallabag_the_wallabagger_icon_is_green": {
+      "message": "Zeigt an, ob die Seite bereits gespeichert ist (das Wallabagger-Symbol ist grün)"
+   },
+   "Indicate_if_page_already_saved_this_sends_URL_of_each_tab_to_wallabag_use_HTTPS_protocol_for_better_security": {
+      "description": "Options",
+      "message": "Anzeigen, ob die Seite bereits gespeichert ist (dies sendet die URL jedes Tabs an Wallabag, verwenden Sie das HTTPS-Protokoll für mehr Sicherheit!)"
+   },
+   "Load_from_file": {
+      "description": "Options",
+      "message": "Laden aus Datei"
+   },
+   "Loading_wallabag_API": {
+      "description": "Popup",
+      "message": "Lade wallabag-API…"
+   },
+   "No_leave_it": {
+      "description": "Popup",
+      "message": "Nein, lass es sein"
+   },
+   "Not_checked": {
+      "description": "Options",
+      "message": "Nicht geprüft"
+   },
+   "Not_granted": {
+      "description": "Options",
+      "message": "Nicht zugestimmt"
+   },
+   "Ok": {
+      "description": "Options",
+      "message": "OK"
+   },
+   "Ok_I_understand": {
+      "description": "Options",
+      "message": "OK, ich hab's verstanden"
+   },
+   "Options": {
+      "description": "Options",
+      "message": "Optionen"
+   },
+   "Options_not_defined": {
+      "description": "Background",
+      "message": "Wallabagger nicht konfiguriert"
+   },
+   "Or_you_can_click_here_to_fill_in_the_credentials_manually": {
+      "message": "Oder hier klicken um die Zugangsdaten manuell einzutragen"
+   },
+   "Others": {
+      "description": "Options",
+      "message": "Andere"
+   },
+   "Pick_a_client": {
+      "message": "Wähle einen Client"
+   },
+   "Remove_this_article_from_Wallabag": {
+      "description": "Popup",
+      "message": "Diesen Artikel aus wallabag löschen"
+   },
+   "Reset_parameters": {
+      "description": "Options",
+      "message": "Parameter zurücksetzen"
+   },
+   "Save": {
+      "description": "Popup",
+      "message": "Speichern"
+   },
+   "Save_Error": {
+      "description": "Background",
+      "message": "Beim Speichern des Artikels ist ein Fehler aufgetreten"
+   },
+   "Save_to_file": {
+      "description": "Options",
+      "message": "In Datei speichern"
+   },
+   "Saving_tags": {
+      "description": "Popup",
+      "message": "Speichere Tags…"
+   },
+   "Saving_the_page_to_wallabag": {
+      "description": "background",
+      "message": "Speichere Seite in wallabag…"
+   },
+   "Saving_the_page_to_wallabag_from_the_browser": {
+      "message": "Speichere den Inhalt des Browsers auf wallabag…"
+   },
+   "Service_pages_can_t_be_stored": {
+      "message": "Serviceseiten können nicht gespeichert werden"
+   },
+   "Set_this_article_as_archived_into_Wallabag": {
+      "description": "Popup",
+      "message": "Diesen Artikel in wallabag als gelesen markieren"
+   },
+   "Set_this_article_as_starred_into_Wallabag": {
+      "description": "Popup",
+      "message": "Diesen Artikel in wallabag als Favorit markieren"
+   },
+   "Settings": {
+      "description": "Options",
+      "message": "Einstellungen"
+   },
+   "Sites_locally_always_fetch_explaination": {
+      "message": "Du möchtest den Inhalt aller Websites aus dem Browser an wallabag senden? Aktiviere dieses Kontrollkästchen."
+   },
+   "Sites_locally_always_fetch_title": {
+      "message": "Alle Webseiten"
+   },
+   "Sites_locally_fetch_general_explaination": {
+      "message": "Manchmal kann wallabag nicht auf die Inhalte zugreifen, die du speichern möchtest. Möglicherweise handelt es sich um eine Website, für die eine Anmeldung erforderlich ist oder die JavaScript verwendet, um die Inhalte anzuzeigen. Mit dieser Funktion kannst du die Inhalte, die du gerade im Browser vor dir hast, senden, sodass wallabag nichts weiter tun muss, als die von dir gesendeten Inhalte zu speichern."
+   },
+   "Sites_locally_whitelist_fetch_explaination": {
+      "message": "Gib die Adresse der Website ein, für die du immer den Inhalt aus dem Browser senden möchtest, anstatt nur die URL."
+   },
+   "Sites_locally_whitelist_fetch_title": {
+      "message": "Positivliste"
+   },
+   "Starred": {
+      "description": "background",
+      "message": "Favoriten"
+   },
+   "State": {
+      "description": "Options",
+      "message": "Status"
+   },
+   "Tag_already_exists": {
+      "description": "Popup",
+      "message": "Tag existiert bereits"
+   },
+   "Tags": {
+      "description": "background",
+      "message": "Tags"
+   },
+   "Tags_found": {
+      "description": "Popup",
+      "message": "Gefundene Tags:"
+   },
+   "Unread": {
+      "description": "background",
+      "message": "Ungelesene"
+   },
+   "Unset_this_article_as_archived_into_Wallabag": {
+      "description": "Popup",
+      "message": "Diesen Artikel in wallabag als ungelesen markieren"
+   },
+   "Unset_this_article_as_starred_into_Wallabag": {
+      "description": "Popup",
+      "message": "Diesen Artikel in wallabag aus den Favoriten entfernen"
+   },
+   "Use_HTTPS": {
+      "description": "Options",
+      "message": "Nutze HTTPS"
+   },
+   "User_login": {
+      "description": "Options",
+      "message": "Benutzer-Login"
+   },
+   "User_password": {
+      "description": "Options",
+      "message": "Benutzerpasswort"
+   },
+   "Wallabag_API_token": {
+      "description": "Options",
+      "message": "wallabag API Token"
+   },
+   "Wallabag_API_version": {
+      "description": "Options",
+      "message": "wallabag API Version"
+   },
+   "Wallabag_URL": {
+      "description": "Options",
+      "message": "wallabag URL"
+   },
+   "Wallabag_URL_checked": {
+      "description": "Options",
+      "message": "wallabag URL getestet"
+   },
+   "Wallabag_it": {
+      "description": "background",
+      "message": "wallabag it!"
+   },
+   "Wallabag_it_description": {
+      "description": "Manifest.json",
+      "message": "Seite in wallabag speichern, ohne das Popup zu öffnen"
+   },
+   "Wallabag_permission_checked": {
+      "description": "Options",
+      "message": "wallabag Berechtigungen geprüft"
+   },
+   "We_need_an_access_to_your_wallabag_instance_to_read_write_and_update_content_Please_test_the_URL_again_and_accept_the_permission_request": {
+      "description": "Options",
+      "message": "Wir benötigen Zugriff auf Ihre wallabag-Instanz zum Lesen, Schreiben und Aktualisieren von Inhalten. Bitte prüfen Sie die URL noch einmal und akzeptieren Sie die Anfrage."
+   },
+   "Yes_delete_it": {
+      "description": "Popup",
+      "message": "Ja, löschen"
+   },
+   "You_can_find_your_credentials_here": {
+      "description": "Options",
+      "message": "Ihre Zugangsdaten finden Sie hier:"
+   },
+   "You_need_to_be_logged_in_your_wallabag_Then_you_need_to_try_again": {
+      "message": "Du solltest auf \u003Ca href=\"%URL%\" target=\"_blank\">deinem wallabag\u003C/a> angemeldet sein. Danach bitte erneut versuchen."
+   },
+   "day_many": {
+      "description": "Options",
+      "message": "Tage"
+   },
+   "day_one": {
+      "description": "Options",
+      "message": "Tag"
+   },
+   "hour_many": {
+      "description": "Options",
+      "message": "Stunden"
+   },
+   "hour_one": {
+      "description": "Options",
+      "message": "Stunde"
+   },
+   "minute_many": {
+      "description": "Options",
+      "message": "Minuten"
+   },
+   "minute_one": {
+      "description": "Options",
+      "message": "Minute"
+   }
 }

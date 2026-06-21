@@ -1,77 +1,55 @@
 {
-  "name": "Wallabagger",
-  "manifest_version": 3,
-  "default_locale": "en",
-  "version": "1.23.4",
-  "description": "__MSG_Extension_description__",
-  "minimum_chrome_version": "88",
-  "icons": {
-    "48": "/img/wallabag-icon-48.png",
-    "128": "/img/wallabag-icon-128.png"
-  },
-  "action": {
-    "default_title": "Wallabagger",
-    "default_icon": "/img/wallabag-icon-48.png",
-    "theme_icons": [
-      {
-        "dark": "/img/wallabagger.svg",
-        "light": "/img/wallabagger-light.svg",
-        "size": 32
-      }
-    ],
-    "default_popup": "popup.html"
-  },
-  "background": {
-    "scripts": ["js/background.js"],
-    "service_worker": "js/background.js",
-    "type": "module"
-  },
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'"
-  },
-  "permissions": [
-    "storage",
-    "contextMenus",
-    "activeTab",
-    "scripting"
-  ],
-  "optional_permissions": [
-    "tabs"
-  ],
-  "optional_host_permissions": [
-    "*://*/api/*"
-  ],
-  "options_ui": {
-    "page": "options.html",
-    "open_in_tab": true
-  },
-  "commands": {
-    "_execute_action": {
-      "suggested_key": {
-        "default": "Alt+W",
-        "windows": "Alt+W",
-        "mac": "Alt+W"
-      }
-    },
-    "wallabag-it": {
-      "suggested_key": {
-        "default": "Alt+Shift+W",
-        "windows": "Alt+Shift+W",
-        "mac": "Alt+Shift+W"
+   "action": {
+      "default_icon": "/img/wallabag-icon-48.png",
+      "default_popup": "popup.html",
+      "default_title": "Wallabagger",
+      "theme_icons": [ {
+         "dark": "/img/wallabagger.svg",
+         "light": "/img/wallabagger-light.svg",
+         "size": 32
+      } ]
+   },
+   "background": {
+      "service_worker": "js/background.js",
+      "type": "module"
+   },
+   "commands": {
+      "_execute_action": {
+         "suggested_key": {
+            "default": "Alt+W",
+            "mac": "Alt+W",
+            "windows": "Alt+W"
+         }
       },
-      "description": "__MSG_Wallabag_it_description__"
-    }
-  },
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "{7a7b1d36-d7a4-481b-92c6-9f5427cb9eb1}",
-      "strict_min_version": "128.0",
-      "data_collection_permissions": {
-        "required": ["none"]
+      "wallabag-it": {
+         "description": "__MSG_Wallabag_it_description__",
+         "suggested_key": {
+            "default": "Alt+Shift+W",
+            "mac": "Alt+Shift+W",
+            "windows": "Alt+Shift+W"
+         }
       }
-    },
-    "gecko_android": {
-      "strict_min_version": "128.0"
-    }
-  }
+   },
+   "content_security_policy": {
+      "extension_pages": "script-src 'self'"
+   },
+   "default_locale": "en",
+   "description": "__MSG_Extension_description__",
+   "icons": {
+      "128": "/img/wallabag-icon-128.png",
+      "48": "/img/wallabag-icon-48.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApvtVnXjLCHbCZDnCNJsjnc4YqVetHzFnmsIqfQIsdBGr/wLVl9nSa8mMpw56BtD5A6uBBWCYD+YHKGmeXz1lsakUoAXCcqzZOM9SskbA1LYB7Xtj9HpXXvxLQcTLwclERogFJhc90YTQH2Erxn4cQpOv/aCUHRmjBL7znkFsmeo5hkQVDgq5sMHpP/GxCwkoRjpVsGV5pDfNrbaZBVp8hC38fnPe3yPnn/ELjgB7YACv+I2WvKh2g7SKUSgEYDP15PEFIrwfJJcXz0KC7oM7RTF9mdNKKR7uTpATzqy33dwIxfHklegjif/I0OX8sj0vhU3WXcv+/PkF+NuIe63tPQIDAQAB",
+   "manifest_version": 3,
+   "minimum_chrome_version": "88",
+   "name": "Wallabagger",
+   "optional_host_permissions": [ "*://*/api/*", "https://api.openai.com/*", "http://localhost/*", "http://127.0.0.1/*" ],
+   "optional_permissions": [ "tabs" ],
+   "options_ui": {
+      "open_in_tab": true,
+      "page": "options.html"
+   },
+   "permissions": [ "storage", "contextMenus", "activeTab", "scripting" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "1.21.0"
 }

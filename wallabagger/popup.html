@@ -4,7 +4,6 @@
 <head>
     <meta charset="utf-8">
     <title>Wallabagger</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/spectre.min.css">
     <link rel="stylesheet" href="css/spectre-exp.min.css">
     <link rel="stylesheet" href="css/icomoon.css">
@@ -14,9 +13,7 @@
 <body>
     <div class="card" id="main-card">
 
-        <div class="card-image-container">
-            <img src="img/wallabag-icon-128.png" class="card-image img-responsive" id="card-image" />
-        </div>
+        <img src="img/wallabag-icon-128.png" class="card-image card-image--default img-responsive" id="card-image" />
 
         <div class="card-header" id="card-header">
             <a
@@ -53,7 +50,7 @@
                   >Edit_the_Wallabag_title_of_this_article</span></button>
               <button
                   id="archived-icon"
-                  data-apicall="saveArchived"
+                  data-apicall="SaveArchived"
                   class="action-button card-meta icon icon-checkmark"
                   data-isset="false"
                   data-seticon="icon-checkmark-full"
@@ -68,7 +65,7 @@
                   >Set_this_article_as_archived_into_Wallabag</span></button>
               <button
                   id="starred-icon"
-                  data-apicall="saveStarred"
+                  data-apicall="SaveStarred"
                   data-isset="false"
                   data-seticon="icon-star-full"
                   data-seticon-title="Set_this_article_as_starred_into_Wallabag"

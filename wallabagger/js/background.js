@@ -4,31 +4,63 @@ import { WallabagApi } from './wallabag-api.js';
 import { PortManager } from './port-manager.js';
 import { BrowserUtils } from './utils/browser-utils.js';
 import { Logger } from './utils/logger.js';
-import { Cache } from './utils/cache.js';
-import { ExistingUrl } from './utils/existing-url.js';
-import { BrowserIcon } from './utils/browser-icon.js';
-
-import { SavePage } from './save-page.js';
+import { htmlToText, getLlmTagsOpenAi, getLlmTagsOllama, generateTwitterHeadlineOpenAi, generateTwitterHeadlineOllama } from './utils/llm-tagger.js';
 
 const logger = new Logger('background');
 const api = new WallabagApi(logger);
-const browserIcon = new BrowserIcon(browser);
 const browserUtils = new BrowserUtils(logger);
-const existingUrl = new ExistingUrl(api, browser, browserIcon, browserUtils, logger);
 
 let Port = null;
 let portConnected = false;
 
-const savePage = new SavePage(api, browser, logger, browserUtils, savePageToWallabag);
+const CacheType = function (enable) {
+    this.enabled = enable;
+    this._cache = [];
+};
+
+CacheType.prototype = {
+    _cache: null,
+    enabled: false,
+
+    str: function (some) {
+        return btoa(unescape(encodeURIComponent(some)));
+    },
+
+    set: function (key, data) {
+        if (this.enabled) {
+            this._cache[this.str(key)] = data;
+        }
+    },
+
+    clear: function (key) {
+        if (this.enabled) {
+            delete this._cache[this.str(key)];
+        }
+    },
+
+    check: function (key) {
+        return this.enabled && (this._cache[this.str(key)] !== undefined);
+    },
+
+    get: function (key) {
+        return this.enabled ? this._cache[this.str(key)] : undefined;
+    }
+};
 
 const wallabaggerAddLinkContexts = ['link', 'page'];
 if (!globalThis.wallabaggerBrowser) {
     wallabaggerAddLinkContexts.push('tab');
 }
 
+const existStates = {
+    exists: 'exists',
+    notexists: 'notexists',
+    wip: 'wip'
+};
 
-const cache = new Cache(true); // TODO - here checking option
-const dirtyCache = new Cache(true);
+const cache = new CacheType(true); // TODO - here checking option
+const dirtyCache = new CacheType(true);
+const existCache = new CacheType(true);
 
 const isBetaVersion = browser.runtime.getManifest().version.split('.').length === 4;
 if (isBetaVersion) {
@@ -39,63 +71,40 @@ const addListeners = () => {
     logger.groupCollapsed('addListeners');
     logger.log('starting');
 
-    if(browser.contextMenus !== undefined) {
-        logger.log('adding onClicked listener');
-        browser.contextMenus.onClicked.addListener(async (info) => {
-            await api.forceInit();
-            switch (info.menuItemId) {
-                case 'wallabagger-add-link':
-                    if (typeof (info.linkUrl) === 'string' && info.linkUrl.length > 0) {
-                        savePage.handle(
-                            {
-                                type: 'url',
-                                url: info.linkUrl,
-                                resetIcon: true
-                            }
-                        );
-                    } else {
-                        browserUtils.getActiveTab().then(tab => {
-                            savePage.handle(
-                                {
-                                    type: 'tab',
-                                    tab: tab
-                                }
-                            );
-                        });
-                    }
-                    break;
-                case 'options':
-                    browser.runtime.openOptionsPage();
-                    break;
-                case 'unread':
-                case 'starred':
-                case 'archive':
-                case 'all':
-                case 'tag':
-                    api.checkParams() && browser.tabs.create({ url: `${api.data.Url}/${info.menuItemId}/list` });
-                    break;
-            }
-        });
-    }
+    logger.log('adding onClicked listener');
+    browser.contextMenus.onClicked.addListener(async (info) => {
+        await api.forceInit();
+        switch (info.menuItemId) {
+            case 'wallabagger-add-link':
+                if (typeof (info.linkUrl) === 'string' && info.linkUrl.length > 0) {
+                    savePageToWallabag(info.linkUrl, true);
+                } else {
+                    savePageToWallabag(info.pageUrl, false);
+                }
+                break;
+            case 'options':
+                browser.runtime.openOptionsPage();
+                break;
+            case 'unread':
+            case 'starred':
+            case 'archive':
+            case 'all':
+            case 'tag':
+                api.checkParams() && browser.tabs.create({ url: `${api.data.Url}/${info.menuItemId}/list` });
+                break;
+        }
+    });
 
-    if(browser.commands !== undefined) {
-        logger.log('adding onCommand listener');
-        browser.commands.onCommand.addListener(async (command) => {
-            if (command === 'wallabag-it') {
-                browser.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                    if (tabs[0] != null) {
-                        savePage.handle(
-                            {
-                                type: 'url',
-                                url: tabs[0].url,
-                                resetIcon: false
-                            }
-                        );
-                    }
-                });
-            }
-        });
-    }
+    logger.log('adding onCommand listener');
+    browser.commands.onCommand.addListener(async (command) => {
+        if (command === 'wallabag-it') {
+            browser.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                if (tabs[0] != null) {
+                    savePageToWallabag(tabs[0].url, false);
+                }
+            });
+        }
+    });
 
     logger.log('adding onConnect listener');
     browser.runtime.onConnect.addListener(async (port) => {
@@ -196,13 +205,59 @@ async function boot () {
     addListeners();
     await contextMenusCreation();
     await api.init();
-    existingUrl.addListeners(api.data.AllowExistCheck);
-    const tags = await api.getTags();
+    addExistCheckListeners(api.data.AllowExistCheck);
+    const { tags } = await api.GetTags();
     cache.set('allTags', tags);
     logger.log('ending');
     logger.groupEnd();
 }
 boot();
+
+function onTabActivatedListener (activeInfo) {
+    browserIcon.set('default');
+    const { tabId } = activeInfo;
+    browser.tabs.get(tabId, function (tab) {
+        if (tab.incognito) {
+            return;
+        }
+        checkExist(tab.url);
+    });
+}
+
+function onTabCreatedListener (tab) {
+    browserIcon.set('default');
+}
+
+function onTabUpdatedListener (tabId, changeInfo, tab) {
+    if (tab.incognito) {
+        return;
+    }
+    if ((changeInfo.status === 'loading') && tab.active) {
+        checkExist(tab.url);
+    }
+}
+
+function addExistCheckListeners (enable) {
+    logger.groupCollapsed('addExistCheckListeners');
+    logger.log('starting');
+    if (enable === true) {
+        browser.tabs.onActivated.addListener(onTabActivatedListener);
+        browser.tabs.onCreated.addListener(onTabCreatedListener);
+        browser.tabs.onUpdated.addListener(onTabUpdatedListener);
+    } else {
+        if (browser.tabs && browser.tabs.onActivated.hasListener(onTabActivatedListener)) {
+            browser.tabs.onActivated.removeListener(onTabActivatedListener);
+        }
+        if (browser.tabs && browser.tabs.onCreated.hasListener(onTabCreatedListener)) {
+            browser.tabs.onCreated.removeListener(onTabCreatedListener);
+        }
+        if (browser.tabs && browser.tabs.onUpdated.hasListener(onTabUpdatedListener)) {
+            browser.tabs.onUpdated.removeListener(onTabUpdatedListener);
+        }
+    }
+    logger.log('ending');
+    logger.groupEnd();
+}
 
 function goToOptionsPage (optionsPageUrl, res) {
     if (typeof (res) === 'undefined' || res.length === 0) {
@@ -227,84 +282,6 @@ function openOptionsPage () {
         });
     }
 }
-async function savePageToWallabag (tabUrl, resetIcon, title, content, proxifiedUrl) {
-    if (browserUtils.isServicePage(tabUrl, api.data.Url)) {
-        return;
-    }
-
-    const url = browserUtils.browserReaderMode.isInReaderMode(tabUrl) ?
-        browserUtils.browserReaderMode.getUrl(tabUrl) : tabUrl;
-    await api.forceInit();
-    if (api.checkParams() === false) {
-        openOptionsPage();
-        return false;
-    }
-    // if WIP and was some dirty changes, return dirtyCache
-    const exists = existingUrl.cache.check(url) ? existingUrl.cache.get(url) : existingUrl.states.notexists;
-    const hasContent = content && content.length > 0;
-    const isToFetchLocally = hasContent ?? api.isSiteToFetchLocally(tabUrl);
-    if (exists === existingUrl.states.wip) {
-        if (dirtyCache.check(url)) {
-            const dc = dirtyCache.get(url);
-            postIfConnected({ response: 'article', article: cutArticle(dc) });
-        }
-        return;
-    }
-
-    // if article was saved, return cache
-    if (!isToFetchLocally && cache.check(url)) {
-        postIfConnected({ response: 'article', article: cutArticle(cache.get(url)) });
-        moveToDirtyCache(url);
-        // @TODO check if other parameters required
-        savePageToWallabag(url, resetIcon);
-        return;
-    }
-
-    // real saving
-    browserIcon.set('wip');
-    existingUrl.cache.set(url, existingUrl.states.wip);
-    const message = isToFetchLocally ? 'Saving_the_page_to_wallabag_from_the_browser' : 'Saving_the_page_to_wallabag';
-    postIfConnected({ response: 'info', text: Common.translate(message) });
-
-    const savePageOptions = {url};
-
-    if(proxifiedUrl) {
-        savePageOptions.origin_url = proxifiedUrl;
-    }
-
-    if (isToFetchLocally) {
-        logger.log('set locally fetched', { title, content });
-        savePageOptions.title = title;
-        savePageOptions.content = content;
-        console.log(savePageOptions);
-    }
-
-    const promise = api.savePage(savePageOptions);
-    promise
-        .then(data => applyDirtyCacheLight(url, data))
-        .then(data => {
-            if (!data.deleted) {
-                browserIcon.set('good');
-                postIfConnected({ response: 'article', article: cutArticle(data) });
-                cache.set(url, cutArticle(data));
-                existingUrl.saveExistFlag(url, existingUrl.states.exists);
-                if (api.data.AllowExistCheck !== true || resetIcon) {
-                    browserIcon.timedToDefault();
-                }
-            } else {
-                cache.clear(url);
-            }
-            return data;
-        })
-        .then(data => applyDirtyCacheReal(url, data))
-        .catch(error => {
-            browserIcon.setTimed('bad');
-            existingUrl.saveExistFlag(url, existingUrl.states.notexists);
-            postIfConnected({ response: 'error', error: { message: Common.translate('Save_Error') } });
-            throw error;
-        });
-};
-
 
 function postIfConnected (obj) {
     portConnected && Port.postMessage(obj);
@@ -316,17 +293,11 @@ async function onPortMessage (msg) {
     try {
         switch (msg.request) {
             case 'save':
-                savePage.handle(
-                    {
-                        type: 'tab',
-                        tab: msg.tab
-                    },
-                    savePageToWallabag
-                );
+                savePageToWallabag(msg.tabUrl, false, msg.title, msg.content, msg.author, msg.publishedAt);
                 break;
             case 'tags':
                 if (!cache.check('allTags')) {
-                    api.getTags()
+                    api.GetTags()
                         .then(data => {
                             postIfConnected({ response: 'tags', tags: data });
                             cache.set('allTags', data);
@@ -337,7 +308,7 @@ async function onPortMessage (msg) {
                 break;
             case 'saveTitle':
                 if (msg.articleId !== -1) {
-                    api.saveTitle(msg.articleId, msg.title).then(data => {
+                    api.SaveTitle(msg.articleId, msg.title).then(data => {
                         postIfConnected({ response: 'title', title: data.title });
                         cache.set(msg.tabUrl, cutArticle(data));
                     });
@@ -347,14 +318,14 @@ async function onPortMessage (msg) {
                 break;
             case 'deleteArticle':
                 if (msg.articleId !== -1) {
-                    api.deleteArticle(msg.articleId).then(data => {
+                    api.DeleteArticle(msg.articleId).then(data => {
                         cache.clear(msg.tabUrl);
                     });
                 } else {
                     dirtyCacheSet(msg.tabUrl, { deleted: true });
                 }
                 browserIcon.set('default');
-                existingUrl.saveExistFlag(msg.tabUrl, existingUrl.states.notexists);
+                saveExistFlag(msg.tabUrl, existStates.notexists);
                 break;
             case 'setup':
                 logger.log('setup');
@@ -369,15 +340,15 @@ async function onPortMessage (msg) {
             case 'setup-save':
                 api.saveParams(msg.data);
                 postIfConnected({ response: 'setup-save', data: api.data });
-                existingUrl.addListeners(msg.data.AllowExistCheck);
+                addExistCheckListeners(msg.data.AllowExistCheck);
                 break;
             case 'setup-gettoken':
                 api.saveParams(msg.data);
-                api.passwordToken()
+                api.PasswordToken()
                     .then(a => {
                         postIfConnected({ response: 'setup-gettoken', data: api.data, result: true });
                         if (!cache.check('allTags')) {
-                            api.getTags()
+                            api.GetTags()
                                 .then(data => { cache.set('allTags', data); });
                         }
                     })
@@ -387,7 +358,7 @@ async function onPortMessage (msg) {
                 break;
             case 'setup-checkurl':
                 api.saveParams(msg.data);
-                api.checkUrl()
+                api.CheckUrl()
                     .then(a => {
                         postIfConnected({ response: 'setup-checkurl', data: api.data, result: true });
                     })
@@ -398,7 +369,7 @@ async function onPortMessage (msg) {
                 break;
             case 'deleteArticleTag':
                 if (msg.articleId !== -1) {
-                    api.deleteArticleTag(msg.articleId, msg.tagId).then(data => {
+                    api.DeleteArticleTag(msg.articleId, msg.tagId).then(data => {
                         postIfConnected({ response: 'articleTags', tags: data.tags });
                         cache.set(msg.tabUrl, cutArticle(data));
                     });
@@ -408,7 +379,7 @@ async function onPortMessage (msg) {
                 break;
             case 'saveTags':
                 if (msg.articleId !== -1) {
-                    api.saveTags(msg.articleId, msg.tags).then(data => {
+                    api.SaveTags(msg.articleId, msg.tags).then(data => {
                         postIfConnected({ response: 'articleTags', tags: data.tags });
                         cache.set(msg.tabUrl, cutArticle(data));
                         return data;
@@ -421,15 +392,15 @@ async function onPortMessage (msg) {
                     dirtyCacheSet(msg.tabUrl, { tagList: msg.tags });
                 }
                 break;
-            case 'saveStarred':
-            case 'saveArchived':
+            case 'SaveStarred':
+            case 'SaveArchived':
                 if (msg.articleId !== -1) {
                     api[msg.request](msg.articleId, msg.value ? 1 : 0).then(data => {
                         postIfConnected({ response: 'action', value: { starred: data.is_starred, archived: data.is_archived } });
                         cache.set(msg.tabUrl, cutArticle(data));
                     });
                 } else {
-                    dirtyCacheSet(msg.tabUrl, (msg.request === 'saveStarred') ? { is_starred: msg.value } : { is_archived: msg.value });
+                    dirtyCacheSet(msg.tabUrl, (msg.request === 'SaveStarred') ? { is_starred: msg.value } : { is_archived: msg.value });
                 }
                 break;
             default: {
@@ -441,6 +412,44 @@ async function onPortMessage (msg) {
         postIfConnected({ response: 'error', error });
     }
 }
+
+const imageExtension = globalThis.wallabaggerBrowser ? 'png' : 'svg';
+const browserIcon = {
+    images: {
+        default: browser.runtime.getManifest().action.default_icon,
+        good: '/img/wallabagger-green.' + imageExtension,
+        wip: '/img/wallabagger-yellow.' + imageExtension,
+        bad: '/img/wallabagger-red.' + imageExtension
+    },
+
+    timedToDefault: function () {
+        setTimeout(() => {
+            this.set('default');
+        }, 5000);
+    },
+
+    set: function (icon) {
+        if (icon === 'default') {
+            // On Firefox, we want to reset to the default icon suitable for the active theme
+            // but Chromium does not support resetting icons.
+            try {
+                browser.action.setIcon({ path: null });
+
+                return;
+            } catch {
+                // Chromium does not support themed icons either,
+                // so let’s just fall back to the default icon.
+            }
+        }
+
+        browser.action.setIcon({ path: this.images[icon] });
+    },
+
+    setTimed: function (icon) {
+        this.set(icon);
+        this.timedToDefault();
+    }
+};
 
 function dirtyCacheSet (key, obj) {
     dirtyCache.set(key, Object.assign(dirtyCache.check(key) ? dirtyCache.get(key) : {}, obj));
@@ -474,10 +483,10 @@ function applyDirtyCacheReal (key, data) {
     if (dirtyCache.check(key)) {
         const dirtyObject = dirtyCache.get(key);
         if (dirtyObject.deleted !== undefined) {
-            return api.deleteArticle(data.id).then(a => { dirtyCache.clear(key); });
+            return api.DeleteArticle(data.id).then(a => { dirtyCache.clear(key); });
         } else {
             if (data.changed !== undefined) {
-                return api.patchArticle(data.id, { title: data.title, starred: data.is_starred, archive: data.is_archived, tags: data.tagList })
+                return api.PatchArticle(data.id, { title: data.title, starred: data.is_starred, archive: data.is_archived, tags: data.tagList })
                     .then(data => cache.set(key, cutArticle(data)))
                     .then(a => { dirtyCache.clear(key); });
             }
@@ -512,8 +521,209 @@ function moveToDirtyCache (url) {
     }
 }
 
+async function savePageToWallabag (url, resetIcon, title, content, author, publishedAt) {
+    if (browserUtils.isServicePage(url, api.data.Url)) {
+        return;
+    }
+    await api.forceInit();
+    if (api.checkParams() === false) {
+        openOptionsPage();
+        return false;
+    }
+    // if WIP and was some dirty changes, return dirtyCache
+    const exists = existCache.check(url) ? existCache.get(url) : existStates.notexists;
+    const isToFetchLocally = api.IsSiteToFetchLocally(url);
+    if (exists === existStates.wip) {
+        if (dirtyCache.check(url)) {
+            const dc = dirtyCache.get(url);
+            postIfConnected({ response: 'article', article: cutArticle(dc) });
+        }
+        return;
+    }
 
+    // if article was saved, return cache
+    if (!isToFetchLocally && cache.check(url)) {
+        postIfConnected({ response: 'article', article: cutArticle(cache.get(url)) });
+        moveToDirtyCache(url);
+        savePageToWallabag(url, resetIcon);
+        return;
+    }
 
+    // real saving
+    browserIcon.set('wip');
+    existCache.set(url, existStates.wip);
+    const message = isToFetchLocally ? 'Saving_the_page_to_wallabag_from_the_browser' : 'Saving_the_page_to_wallabag';
+    postIfConnected({ response: 'info', text: Common.translate(message) });
+
+    const savePageOptions = { url };
+
+    if (isToFetchLocally) {
+        logger.log('set locally fetched', { title, content });
+        savePageOptions.title = title;
+        savePageOptions.content = content;
+    }
+
+    // Always include extracted metadata when available
+    if (author) savePageOptions.author = author;
+    if (publishedAt) savePageOptions.publishedAt = publishedAt;
+
+    const promise = api.SavePage(savePageOptions);
+    promise
+        .then(data => applyDirtyCacheLight(url, data))
+        .then(async data => {
+            if (!data.deleted) {
+                browserIcon.set('good');
+                postIfConnected({ response: 'article', article: cutArticle(data) });
+                cache.set(url, cutArticle(data));
+                saveExistFlag(url, existStates.exists);
+                if (api.data.AllowExistCheck !== true || resetIcon) {
+                    browserIcon.timedToDefault();
+                }
+
+                // Optional LLM tag suggestions and Twitter headline generation (run in parallel)
+                await Promise.all([
+                    applyLlmTags(data, content || '', url),
+                    applyTwitterHeadline(data, content || '', url)
+                ]);
+            } else {
+                cache.clear(url);
+            }
+            return data;
+        })
+        .then(data => applyDirtyCacheReal(url, data))
+        .catch(error => {
+            browserIcon.setTimed('bad');
+            saveExistFlag(url, existStates.notexists);
+            postIfConnected({ response: 'error', error: { message: Common.translate('Save_Error') } });
+            throw error;
+        });
+};
+
+async function applyLlmTags (savedEntry, localContent, url) {
+    const provider = api.data.LlmProvider;
+    if (!provider || provider === 'disabled') return;
+
+    try {
+        // Use local content if available, otherwise use the content wallabag stored
+        const htmlContent = localContent || savedEntry.content || '';
+        if (!htmlContent) {
+            logger.log('LLM tagging: no content available, skipping');
+            return;
+        }
+
+        const plainText = htmlToText(htmlContent);
+        if (plainText.length < 100) {
+            logger.log('LLM tagging: content too short, skipping');
+            return;
+        }
+
+        // Get all known tags for the allowed list
+        const allTagsData = cache.check('allTags') ? cache.get('allTags') : await api.GetTags();
+        const allowedTags = (allTagsData || []).map(t => t.label).filter(Boolean);
+
+        let suggestedTags = [];
+        if (provider === 'openai') {
+            const apiKey = api.data.LlmApiKey;
+            const model = api.data.LlmModel || 'gpt-4o-mini';
+            const baseUrl = api.data.LlmBaseUrl || 'https://api.openai.com';
+            if (!apiKey) return;
+            suggestedTags = await getLlmTagsOpenAi(apiKey, model, plainText, allowedTags, baseUrl);
+        } else if (provider === 'ollama') {
+            const ollamaUrl = api.data.LlmOllamaUrl || 'http://localhost:11434';
+            const model = api.data.LlmOllamaModel || 'llama3.1:8b';
+            const ollamaApiKey = api.data.LlmOllamaApiKey || null;
+            suggestedTags = await getLlmTagsOllama(ollamaUrl, model, plainText, allowedTags, ollamaApiKey);
+        }
+
+        if (suggestedTags.length === 0) {
+            logger.log('LLM tagging: no tags suggested');
+            return;
+        }
+
+        logger.log('LLM tagging: suggested tags', suggestedTags);
+        const tagCsv = suggestedTags.join(',');
+        const updatedEntry = await api.SaveTags(savedEntry.id, tagCsv);
+        cache.set(url, cutArticle(updatedEntry));
+        addToAllTags(updatedEntry.tags);
+        postIfConnected({ response: 'articleTags', tags: updatedEntry.tags });
+        logger.log('LLM tagging: applied tags', suggestedTags);
+    } catch (err) {
+        // LLM tagging is best-effort; log but don't surface to user
+        logger.error('LLM tagging failed:', err);
+    }
+};
+
+async function applyTwitterHeadline (savedEntry, content, url) {
+    if (!/^https?:\/\/(www\.)?(twitter|x|linkedin|facebook)\.com\//.test(url)) return;
+    const provider = api.data.LlmProvider;
+    if (!provider || provider === 'disabled') return;
+
+    try {
+        const plainText = htmlToText(content || '');
+        if (plainText.length < 20) return;
+
+        let headline = null;
+        if (provider === 'openai') {
+            const apiKey = api.data.LlmApiKey;
+            if (!apiKey) return;
+            const model = api.data.LlmModel || 'gpt-4o-mini';
+            const baseUrl = api.data.LlmBaseUrl || 'https://api.openai.com';
+            headline = await generateTwitterHeadlineOpenAi(apiKey, model, plainText, baseUrl);
+        } else if (provider === 'ollama') {
+            const ollamaUrl = api.data.LlmOllamaUrl || 'http://localhost:11434';
+            const model = api.data.LlmOllamaModel || 'llama3.1:8b';
+            const ollamaApiKey = api.data.LlmOllamaApiKey || null;
+            headline = await generateTwitterHeadlineOllama(ollamaUrl, model, plainText, ollamaApiKey);
+        }
+
+        if (!headline) return;
+
+        logger.log('LLM headline generated:', headline);
+        const updatedEntry = await api.SaveTitle(savedEntry.id, headline);
+        if (updatedEntry) {
+            cache.set(url, cutArticle(updatedEntry));
+            postIfConnected({ response: 'article', article: cutArticle(updatedEntry) });
+        }
+    } catch (err) {
+        // Headline generation is best-effort; log but don't surface to user
+        logger.error('Twitter headline generation failed:', err);
+    }
+}
+
+const checkExist = (dirtyUrl) => {
+    if (browserUtils.isServicePage(dirtyUrl, api.data.Url)) { return; }
+    const url = dirtyUrl.split('#')[0];
+    if (existCache.check(url)) {
+        const existsFlag = existCache.get(url);
+        if (existsFlag === existStates.exists) {
+            browserIcon.set('good');
+        }
+        if (existsFlag === existStates.wip) {
+            browserIcon.set('wip');
+        }
+    } else {
+        requestExists(url);
+    }
+};
+
+const requestExists = (url) =>
+    api.EntryExists(url)
+        .then(data => {
+            let icon = 'default';
+            if (data.exists) {
+                icon = 'good';
+                if (api.data.AllowExistCheck !== true) {
+                    browserIcon.setTimed(icon);
+                }
+            }
+            browserIcon.set(icon);
+            saveExistFlag(url, data.exists ? existStates.exists : existStates.notexists);
+            return data.exists;
+        });
+
+const saveExistFlag = (url, exists) => {
+    existCache.set(url, exists);
+};
 
 const addToAllTags = (tags) => {
     if (tags.length === 0) { return; }

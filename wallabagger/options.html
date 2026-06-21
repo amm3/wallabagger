@@ -152,13 +152,6 @@
                 min-width: 300px;
             }
         }
-
-        @media (max-width: 800px) {
-            body {
-                padding-left: 20px;
-                padding-right: 20px;
-            }
-        }
     </style>
 </head>
 
@@ -175,7 +168,7 @@
                     <div class="input-group wallabag-url-group">
                         <span class="url-group">
                             <span class="input-group-addon" id="input-group-wallabagurl">https://</span>
-                            <input class="form-input wallabag-url" type="url" id="input-wallabagurl" placeholder="app.wallabag.it" />
+                            <input class="form-input wallabag-url" type="text" id="input-wallabagurl" placeholder="app.wallabag.it" />
                         </span>
                         <button class="btn input-group-btn" id="checkurl-button" data-i18n="Check_URL">Check URL</button>
 
@@ -298,6 +291,48 @@
                         <input type="checkbox" id="single-tag"/>
                         <i class="form-icon"></i><span data-i18n="Auto_add_single_tag">Auto add tag if found only one</span>
                     </label>
+                </div>
+
+                <h3>AI Tag Suggestions</h3>
+                <p>Automatically suggest tags using an LLM after saving an article. The model receives the article text and your existing tag list.</p>
+
+                <div class="form-group">
+                    <label class="form-label" for="llm-provider-select">Provider</label>
+                    <select class="form-select" id="llm-provider-select">
+                        <option value="disabled">Disabled</option>
+                        <option value="openai">OpenAI (or compatible)</option>
+                        <option value="ollama">Ollama</option>
+                    </select>
+                </div>
+
+                <div id="llm-openai-section" class="d-hide">
+                    <div class="form-group">
+                        <label class="form-label" for="llm-api-key-input">API Key</label>
+                        <input class="form-input" type="password" id="llm-api-key-input" placeholder="sk-..." autocomplete="off" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="llm-model-input">Model</label>
+                        <input class="form-input" type="text" id="llm-model-input" placeholder="gpt-4o-mini" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="llm-base-url-input">Base URL <small>(optional — for OpenAI-compatible endpoints)</small></label>
+                        <input class="form-input" type="text" id="llm-base-url-input" placeholder="https://api.openai.com" />
+                    </div>
+                </div>
+
+                <div id="llm-ollama-section" class="d-hide">
+                    <div class="form-group">
+                        <label class="form-label" for="llm-ollama-url-input">Ollama URL</label>
+                        <input class="form-input" type="text" id="llm-ollama-url-input" placeholder="http://localhost:11434" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="llm-ollama-model-input">Model</label>
+                        <input class="form-input" type="text" id="llm-ollama-model-input" placeholder="llama3.1:8b" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="llm-ollama-api-key-input">API Key <small>(optional — for proxy auth)</small></label>
+                        <input class="form-input" type="password" id="llm-ollama-api-key-input" autocomplete="off" />
+                    </div>
                 </div>
 
                 <h3 data-i18n="Others">Others</h3>

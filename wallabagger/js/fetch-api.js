@@ -1,10 +1,11 @@
-'use strict';
+const FetchApi = function () {};
 
-class FetchApi {
-    #getRequestOptions (method, token, content) {
+FetchApi.prototype = {
+
+    getRequestOptions: function (method, token, content) {
         let options = {
             method,
-            headers: this.#getHeaders(token),
+            headers: this.getHeaders(token),
             mode: 'cors',
             cache: 'default',
             credentials: 'omit'
@@ -13,9 +14,9 @@ class FetchApi {
             options = Object.assign(options, { body: JSON.stringify(content) });
         }
         return options;
-    }
+    },
 
-    #getHeaders (token) {
+    getHeaders: function (token) {
         const headers = {
             Accept: 'application/json',
             'Content-Type': 'application/json'
@@ -24,27 +25,40 @@ class FetchApi {
             headers.Authorization = `Bearer ${token}`;
         }
         return headers;
-    }
+    },
 
-    patch (url, token, content) {
-        return this.#fetch(url, 'PATCH', token, content);
-    }
+    Patch: function (url, token, content) {
+        return this.Fetch(url, 'PATCH', token, content);
+    },
 
-    post (url, token, content) {
-        return this.#fetch(url, 'POST', token, content);
-    }
+    Post: function (url, token, content) {
+        return this.Fetch(url, 'POST', token, content);
+    },
 
-    delete (url, token) {
-        return this.#fetch(url, 'DELETE', token, '');
-    }
+    Delete: function (url, token) {
+        return this.Fetch(url, 'DELETE', token, '');
+    },
 
-    get (url, token) {
-        return this.#fetch(url, 'GET', token, '');
-    }
+    Get: function (url, token) {
+        return this.Fetch(url, 'GET', token, '');
+    },
 
-    #fetch (url, method, token, content) {
-        const options = this.#getRequestOptions(method, token, content);
-        return fetch(url, options).then(response => response.ok ? response.json() : response.json().then(err => Promise.reject(err)));
+    Fetch: function (url, method, token, content) {
+        const options = this.getRequestOptions(method, token, content);
+        return fetch(url, options).then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            return response.text().then(text => {
+                let err;
+                try {
+                    err = JSON.parse(text);
+                } catch {
+                    err = new Error(`HTTP ${response.status} ${response.statusText}`);
+                }
+                return Promise.reject(err);
+            });
+        });
     }
 };
 

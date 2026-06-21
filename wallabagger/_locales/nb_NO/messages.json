@@ -1,349 +1,310 @@
 {
-    "Article_s_title": {
-        "message": "Artikkelnavn",
-        "description": "Popup"
-    },
-    "Cancel": {
-        "message": "Avbryt",
-        "description": "Popup"
-    },
-    "All_entries": {
-        "message": "Alle oppføringer",
-        "description": "background"
-    },
-    "Article_s_link": {
-        "message": "Artikkellenke",
-        "description": "Popup"
-    },
-    "Check_URL": {
-        "message": "Sjekk nettadressen",
-        "description": "Options"
-    },
-    "Checklist": {
-        "message": "Sjekkliste",
-        "description": "Options"
-    },
-    "Client_ID": {
-        "message": "Klient-ID",
-        "description": "Options"
-    },
-    "Client_secret": {
-        "message": "Klienthemmelighet",
-        "description": "Options"
-    },
-    "day_many": {
-        "message": "dager",
-        "description": "Options"
-    },
-    "day_one": {
-        "message": "dag",
-        "description": "Options"
-    },
-    "Delete_this_article": {
-        "message": "Slett denne artikkelen",
-        "description": "Popup"
-    },
-    "Denied": {
-        "message": "Nektet",
-        "description": "Options"
-    },
-    "Download_file": {
-        "message": "Last ned fil",
-        "description": "Options"
-    },
-    "Starred": {
-        "message": "Stjernemerket",
-        "description": "background"
-    },
-    "State": {
-        "message": "Tilstand",
-        "description": "Options"
-    },
-    "Use_HTTPS": {
-        "message": "Bruk HTTPS",
-        "description": "Options"
-    },
-    "Granted": {
-        "message": "Innvilget",
-        "description": "Options"
-    },
-    "Load_from_file": {
-        "message": "Last inn fra fil",
-        "description": "Options"
-    },
-    "Loading_wallabag_API": {
-        "message": "Laster inn wallabag-API …",
-        "description": "Popup"
-    },
-    "minute_many": {
-        "message": "minutter",
-        "description": "Options"
-    },
-    "minute_one": {
-        "message": "minutt",
-        "description": "Options"
-    },
-    "Not_granted": {
-        "message": "Ikke innvilget",
-        "description": "Options"
-    },
-    "Ok": {
-        "message": "OK",
-        "description": "Options"
-    },
-    "Options": {
-        "message": "Alternativer",
-        "description": "Options"
-    },
-    "Ok_I_understand": {
-        "message": "OK, jeg forstår",
-        "description": "Options"
-    },
-    "Reset_parameters": {
-        "message": "Tilbakestill parametre",
-        "description": "Options"
-    },
-    "Save": {
-        "message": "Lagre",
-        "description": "Popup"
-    },
-    "Saving_the_page_to_wallabag": {
-        "message": "Lagrer siden i wallabag …",
-        "description": "background"
-    },
-    "Remove_this_article_from_Wallabag": {
-        "message": "Fjern denne artikkelen fra wallabag",
-        "description": "Popup"
-    },
-    "Set_this_article_as_archived_into_Wallabag": {
-        "message": "Sett artikkel som arkivert i wallabag",
-        "description": "Popup"
-    },
-    "User_login": {
-        "message": "Brukerinnlogging",
-        "description": "Options"
-    },
-    "User_password": {
-        "message": "Brukerpassord",
-        "description": "Options"
-    },
-    "hour_one": {
-        "message": "time",
-        "description": "Options"
-    },
-    "hour_many": {
-        "message": "timer",
-        "description": "Options"
-    },
-    "Unread": {
-        "message": "Ulest",
-        "description": "background"
-    },
-    "Save_to_file": {
-        "message": "Lagre som fil",
-        "description": "Options"
-    },
-    "Set_this_article_as_starred_into_Wallabag": {
-        "message": "Sett artikkel som stjernemerket i wallabag",
-        "description": "Popup"
-    },
-    "Settings": {
-        "message": "Innstillinger",
-        "description": "Options"
-    },
-    "Enter_your_tags_here": {
-        "message": "Legg til dine stikkord her",
-        "description": "Popup"
-    },
-    "Wallabag_it_description": {
-        "message": "Lagre siden i Wallabag uten å åpne popup-vinduet",
-        "description": "Manifest.json"
-    },
-    "Unset_this_article_as_archived_into_Wallabag": {
-        "message": "Slå av arkivstatus for denne artikkelen i wallabag",
-        "description": "Popup"
-    },
-    "Saving_tags": {
-        "message": "Lagrer stikkord…",
-        "description": "Popup"
-    },
-    "Go_to_this_article_page": {
-        "message": "Gå til denne artikkelen",
-        "description": "Popup"
-    },
-    "Archive_by_default_when_saving_page": {
-        "message": "Arkiver som standard når du lagrer siden",
-        "description": "Options"
-    },
-    "Due_to_security_reason_we_allow_this_option_only_for_HTTPS_protocol": {
-        "message": "Av sikkerhetshensyn tillater vi dette alternativet bare for HTTPS protokollen",
-        "description": "Options"
-    },
-    "Wallabag_URL": {
-        "message": "wallabag-URL",
-        "description": "Options"
-    },
-    "Agreed": {
-        "message": "Akseptert",
-        "description": "Options"
-    },
-    "Extension_description": {
-        "message": "Lagre nettadresser og innhold fra alle sider til en Wallabag v2-server for senere lesing, med redigerbare metadata.",
-        "description": "Manifest.json"
-    },
-    "No_leave_it": {
-        "message": "Nei, la det vær",
-        "description": "Popup"
-    },
-    "Wallabag_permission_checked": {
-        "message": "wallabag-tillatelse sjekket",
-        "description": "Options"
-    },
-    "Tags": {
-        "message": "Stikkord",
-        "description": "background"
-    },
-    "Save_Error": {
-        "message": "Det oppsto en feil ved lagring av artikkelen",
-        "description": "Background"
-    },
-    "Enable_this_only_if_developers_told_you_to": {
-        "message": "Aktiver denne bare dersom en utvikler har bedt deg",
-        "description": "Options"
-    },
-    "Allow_Space_in_tags_this_disables_Space_as_send_tags_key_use_Enter_key_instead": {
-        "message": "Tillat mellomrom i stikkord (dette deaktiverer mellomromstasten som send-stikkord-tast, bruk ny linje-tasten i stedet)",
-        "description": "Options"
-    },
-    "Archive": {
-        "message": "Arkiv",
-        "description": "background"
-    },
-    "Wallabag_URL_checked": {
-        "message": "wallabag-URL sjekket",
-        "description": "Options"
-    },
-    "Tag_already_exists": {
-        "message": "Stikkord finnes allerede",
-        "description": "Popup"
-    },
-    "Not_checked": {
-        "message": "Ikke valgt",
-        "description": "Options"
-    },
-    "Fetch_by_default_when_saving_page": {
-        "message": "Hent innhold fra nettleseren som standard når du lagrer siden",
-        "description": "Options"
-    },
-    "Options_not_defined": {
-        "message": "Wallabagger ikke konfigurert",
-        "description": "Background"
-    },
-    "Wallabag_API_version": {
-        "message": "wallabag-API versjon",
-        "description": "Options"
-    },
-    "Expired": {
-        "message": "Utløpt",
-        "description": "Options"
-    },
-    "Do_you_want_to_remove_this_article_permanently_from_wallabag": {
-        "message": "Øsnker du permanent å slette denne artikkelen fra wallabag?",
-        "description": "Popup"
-    },
-    "Auto_add_single_tag": {
-        "message": "Automatisk legg til stikkord",
-        "description": "Options"
-    },
-    "Others": {
-        "message": "Andre",
-        "description": "Options"
-    },
-    "Fetch_from_the_browser": {
-        "message": "Henter innhold fra nettleseren",
-        "description": "Options"
-    },
-    "Yes_delete_it": {
-        "message": "Ja, slett det",
-        "description": "Popup"
-    },
-    "Edit_the_Wallabag_title_of_this_article": {
-        "message": "Rediger wallabag sin tittel for denne artikkelen",
-        "description": "Popup"
-    },
-    "Get_token": {
-        "message": "Hent symbol",
-        "description": "Options"
-    },
-    "Go_to_Wallabag_s_article_page": {
-        "message": "Gå til wallabag sin artikkel",
-        "description": "Popup"
-    },
-    "Wallabag_it": {
-        "message": "wallabag det!",
-        "description": "background"
-    },
-    "Indicate_if_page_already_saved_this_sends_URL_of_each_tab_to_wallabag_use_HTTPS_protocol_for_better_security": {
-        "message": "Angi om siden allerede er lagret (dette sender URL-en til hver fane til wallabag, bruk HTTPS-protokollen for bedre sikkerhet!)",
-        "description": "Options"
-    },
-    "You_can_find_your_credentials_here": {
-        "message": "Du finner dine akkreditiver her:",
-        "description": "Options"
-    },
-    "Tags_found": {
-        "message": "Stikkord funnet:",
-        "description": "Popup"
-    },
-    "Unset_this_article_as_starred_into_Wallabag": {
-        "message": "Slå av stjernemerke-status for denne artikkelen i wallabag",
-        "description": "Popup"
-    },
-    "Wallabag_API_token": {
-        "message": "wallabag-API symbol",
-        "description": "Options"
-    },
-    "We_need_an_access_to_your_wallabag_instance_to_read_write_and_update_content_Please_test_the_URL_again_and_accept_the_permission_request": {
-        "message": "Vi trenger tilgang til wallabag-instansen din for å lese, skrive og oppdatere innhold. Vennligst test URL-en på nytt og godta forespørselen.",
-        "description": "Options"
-    },
-    "Error_empty_data": {
-        "message": "Feil: Ingen data funnet!"
-    },
-    "First_you_need_to_create_a_new_client_Then_you_need_to_try_again": {
-        "message": "Først må du opprette <a href=\"%URL%\" target=\"_blank\">en ny klientt</a>. Deretter må du prøve på nytt."
-    },
-    "Saving_the_page_to_wallabag_from_the_browser": {
-        "message": "Lagrer sideinnholdet i nettleseren til wallabag…"
-    },
-    "Sites_locally_always_fetch_title": {
-        "message": "Alle nettsidene"
-    },
-    "You_need_to_be_logged_in_your_wallabag_Then_you_need_to_try_again": {
-        "message": "Du må være logget inn på <a href=\"%URL%\" target=\"_blank\">din wallabag</a>. Prøv deretter på nytt."
-    },
-    "Service_pages_can_t_be_stored": {
-        "message": "Tjenestesidene kan ikke bli lagret"
-    },
-    "Sites_locally_always_fetch_explaination": {
-        "message": "Ønsker du å sende innholdet fra alle nettsteder i nettleseren til wallabag? Krysse av i denne boksen."
-    },
-    "Indicate_if_page_already_saved_into_wallabag_the_wallabagger_icon_is_green": {
-        "message": "Vis om siden allerede er lagret (wallabagger-ikonet blir grønt)"
-    },
-    "Sites_locally_whitelist_fetch_title": {
-        "message": "Hvitliste"
-    },
-    "Or_you_can_click_here_to_fill_in_the_credentials_manually": {
-        "message": "Eller du kan klikke her for å legge inn påloggingsdetaljene manuelt"
-    },
-    "Pick_a_client": {
-        "message": "Velg en klient"
-    },
-    "Sites_locally_fetch_general_explaination": {
-        "message": "Noen ganger har ikke wallabag tilgang til innholdet du prøver å lagre. Det kan være et nettsted som krever innlogging, eller som bruker JavaScript for å vise innholdet. Denne funksjonen gir deg muligheten til å sende innholdet du har foran deg i nettleseren, slik at wallabag slipper å gjøre noe annet enn å lagre det du sender."
-    },
-    "Sites_locally_whitelist_fetch_explaination": {
-        "message": "Oppgi adressen til nettstedet der du alltid vil sende innholdet fra nettleseren, i stedet for kun nettsidens URL."
-    }
+   "Agreed": {
+      "description": "Options",
+      "message": "Akseptert"
+   },
+   "All_entries": {
+      "description": "background",
+      "message": "Alle oppføringer"
+   },
+   "Allow_Space_in_tags_this_disables_Space_as_send_tags_key_use_Enter_key_instead": {
+      "description": "Options",
+      "message": "Tillat mellomrom i stikkord (dette deaktiverer mellomromstasten som send-stikkord-tast, bruk ny linje-tasten i stedet)"
+   },
+   "Archive": {
+      "description": "background",
+      "message": "Arkiv"
+   },
+   "Archive_by_default_when_saving_page": {
+      "description": "Options",
+      "message": "Arkiver som standard når du lagrer siden"
+   },
+   "Article_s_link": {
+      "description": "Popup",
+      "message": "Artikkellenke"
+   },
+   "Article_s_title": {
+      "description": "Popup",
+      "message": "Artikkelnavn"
+   },
+   "Auto_add_single_tag": {
+      "description": "Options",
+      "message": "Automatisk legg til stikkord"
+   },
+   "Cancel": {
+      "description": "Popup",
+      "message": "Avbryt"
+   },
+   "Check_URL": {
+      "description": "Options",
+      "message": "Sjekk nettadressen"
+   },
+   "Checklist": {
+      "description": "Options",
+      "message": "Sjekkliste"
+   },
+   "Client_ID": {
+      "description": "Options",
+      "message": "Klient-ID"
+   },
+   "Client_secret": {
+      "description": "Options",
+      "message": "Klienthemmelighet"
+   },
+   "Delete_this_article": {
+      "description": "Popup",
+      "message": "Slett denne artikkelen"
+   },
+   "Denied": {
+      "description": "Options",
+      "message": "Nektet"
+   },
+   "Do_you_want_to_remove_this_article_permanently_from_wallabag": {
+      "description": "Popup",
+      "message": "Øsnker du permanent å slette denne artikkelen fra wallabag?"
+   },
+   "Download_file": {
+      "description": "Options",
+      "message": "Last ned fil"
+   },
+   "Due_to_security_reason_we_allow_this_option_only_for_HTTPS_protocol": {
+      "description": "Options",
+      "message": "Av sikkerhetshensyn tillater vi dette alternativet bare for HTTPS protokollen"
+   },
+   "Edit_the_Wallabag_title_of_this_article": {
+      "description": "Popup",
+      "message": "Rediger wallabag sin tittel for denne artikkelen"
+   },
+   "Enable_this_only_if_developers_told_you_to": {
+      "description": "Options",
+      "message": "Aktiver denne bare dersom en utvikler har bedt deg"
+   },
+   "Enter_your_tags_here": {
+      "description": "Popup",
+      "message": "Legg til dine stikkord her"
+   },
+   "Expired": {
+      "description": "Options",
+      "message": "Utløpt"
+   },
+   "Extension_description": {
+      "description": "Manifest.json",
+      "message": "Denne wallabag v2-utvidelse har muligheten til å redigere tittel og stikkord, angi stjernemerke, og sette tilstand til arkivert eller slettet."
+   },
+   "Fetch_by_default_when_saving_page": {
+      "description": "Options",
+      "message": "Hent innhold fra nettleseren som standard når du lagrer siden"
+   },
+   "Fetch_from_the_browser": {
+      "description": "Options",
+      "message": "Henter innhold fra nettleseren"
+   },
+   "Get_token": {
+      "description": "Options",
+      "message": "Hent symbol"
+   },
+   "Go_to_Wallabag_s_article_page": {
+      "description": "Popup",
+      "message": "Gå til wallabag sin artikkel"
+   },
+   "Go_to_this_article_page": {
+      "description": "Popup",
+      "message": "Gå til denne artikkelen"
+   },
+   "Granted": {
+      "description": "Options",
+      "message": "Innvilget"
+   },
+   "Indicate_if_page_already_saved_this_sends_URL_of_each_tab_to_wallabag_use_HTTPS_protocol_for_better_security": {
+      "description": "Options",
+      "message": "Angi om siden allerede er lagret (dette sender URL-en til hver fane til wallabag, bruk HTTPS-protokollen for bedre sikkerhet!)"
+   },
+   "Load_from_file": {
+      "description": "Options",
+      "message": "Last inn fra fil"
+   },
+   "Loading_wallabag_API": {
+      "description": "Popup",
+      "message": "Laster inn wallabag-API …"
+   },
+   "No_leave_it": {
+      "description": "Popup",
+      "message": "Nei, la det vær"
+   },
+   "Not_checked": {
+      "description": "Options",
+      "message": "Ikke valgt"
+   },
+   "Not_granted": {
+      "description": "Options",
+      "message": "Ikke innvilget"
+   },
+   "Ok": {
+      "description": "Options",
+      "message": "OK"
+   },
+   "Ok_I_understand": {
+      "description": "Options",
+      "message": "OK, jeg forstår"
+   },
+   "Options": {
+      "description": "Options",
+      "message": "Alternativer"
+   },
+   "Options_not_defined": {
+      "description": "Background",
+      "message": "Wallabagger ikke konfigurert"
+   },
+   "Others": {
+      "description": "Options",
+      "message": "Andre"
+   },
+   "Remove_this_article_from_Wallabag": {
+      "description": "Popup",
+      "message": "Fjern denne artikkelen fra wallabag"
+   },
+   "Reset_parameters": {
+      "description": "Options",
+      "message": "Tilbakestill parametre"
+   },
+   "Save": {
+      "description": "Popup",
+      "message": "Lagre"
+   },
+   "Save_Error": {
+      "description": "Background",
+      "message": "Det oppsto en feil ved lagring av artikkelen"
+   },
+   "Save_to_file": {
+      "description": "Options",
+      "message": "Lagre som fil"
+   },
+   "Saving_tags": {
+      "description": "Popup",
+      "message": "Lagrer stikkord…"
+   },
+   "Saving_the_page_to_wallabag": {
+      "description": "background",
+      "message": "Lagrer siden i wallabag …"
+   },
+   "Set_this_article_as_archived_into_Wallabag": {
+      "description": "Popup",
+      "message": "Sett artikkel som arkivert i wallabag"
+   },
+   "Set_this_article_as_starred_into_Wallabag": {
+      "description": "Popup",
+      "message": "Sett artikkel som stjernemerket i wallabag"
+   },
+   "Settings": {
+      "description": "Options",
+      "message": "Innstillinger"
+   },
+   "Starred": {
+      "description": "background",
+      "message": "Stjernemerket"
+   },
+   "State": {
+      "description": "Options",
+      "message": "Tilstand"
+   },
+   "Tag_already_exists": {
+      "description": "Popup",
+      "message": "Stikkord finnes allerede"
+   },
+   "Tags": {
+      "description": "background",
+      "message": "Stikkord"
+   },
+   "Tags_found": {
+      "description": "Popup",
+      "message": "Stikkord funnet:"
+   },
+   "Unread": {
+      "description": "background",
+      "message": "Ulest"
+   },
+   "Unset_this_article_as_archived_into_Wallabag": {
+      "description": "Popup",
+      "message": "Slå av arkivstatus for denne artikkelen i wallabag"
+   },
+   "Unset_this_article_as_starred_into_Wallabag": {
+      "description": "Popup",
+      "message": "Slå av stjernemerke-status for denne artikkelen i wallabag"
+   },
+   "Use_HTTPS": {
+      "description": "Options",
+      "message": "Bruk HTTPS"
+   },
+   "User_login": {
+      "description": "Options",
+      "message": "Brukerinnlogging"
+   },
+   "User_password": {
+      "description": "Options",
+      "message": "Brukerpassord"
+   },
+   "Wallabag_API_token": {
+      "description": "Options",
+      "message": "wallabag-API symbol"
+   },
+   "Wallabag_API_version": {
+      "description": "Options",
+      "message": "wallabag-API versjon"
+   },
+   "Wallabag_URL": {
+      "description": "Options",
+      "message": "wallabag-URL"
+   },
+   "Wallabag_URL_checked": {
+      "description": "Options",
+      "message": "wallabag-URL sjekket"
+   },
+   "Wallabag_it": {
+      "description": "background",
+      "message": "wallabag det!"
+   },
+   "Wallabag_it_description": {
+      "description": "Manifest.json",
+      "message": "Lagre siden i Wallabag uten å åpne popup-vinduet"
+   },
+   "Wallabag_permission_checked": {
+      "description": "Options",
+      "message": "wallabag-tillatelse sjekket"
+   },
+   "We_need_an_access_to_your_wallabag_instance_to_read_write_and_update_content_Please_test_the_URL_again_and_accept_the_permission_request": {
+      "description": "Options",
+      "message": "Vi trenger tilgang til wallabag-instansen din for å lese, skrive og oppdatere innhold. Vennligst test URL-en på nytt og godta forespørselen."
+   },
+   "Yes_delete_it": {
+      "description": "Popup",
+      "message": "Ja, slett det"
+   },
+   "You_can_find_your_credentials_here": {
+      "description": "Options",
+      "message": "Du finner dine akkreditiver her:"
+   },
+   "day_many": {
+      "description": "Options",
+      "message": "dager"
+   },
+   "day_one": {
+      "description": "Options",
+      "message": "dag"
+   },
+   "hour_many": {
+      "description": "Options",
+      "message": "timer"
+   },
+   "hour_one": {
+      "description": "Options",
+      "message": "time"
+   },
+   "minute_many": {
+      "description": "Options",
+      "message": "minutter"
+   },
+   "minute_one": {
+      "description": "Options",
+      "message": "minutt"
+   }
 }

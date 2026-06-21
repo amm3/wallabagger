@@ -43,6 +43,15 @@ class OptionsController {
         this.httpsMessage = document.getElementById('https-message');
         this.httpsButton = document.getElementById('https-button');
         this.autoAddSingleTag = document.getElementById('single-tag');
+        this.llmProviderSelect = document.getElementById('llm-provider-select');
+        this.llmOpenAiSection = document.getElementById('llm-openai-section');
+        this.llmOllamaSection = document.getElementById('llm-ollama-section');
+        this.llmApiKeyInput = document.getElementById('llm-api-key-input');
+        this.llmModelInput = document.getElementById('llm-model-input');
+        this.llmBaseUrlInput = document.getElementById('llm-base-url-input');
+        this.llmOllamaUrlInput = document.getElementById('llm-ollama-url-input');
+        this.llmOllamaModelInput = document.getElementById('llm-ollama-model-input');
+        this.llmOllamaApiKeyInput = document.getElementById('llm-ollama-api-key-input');
         this.clientSelector = new ClientSelector(document.getElementById('client-selector'));
         this.addListeners_();
         this.data = null;
@@ -65,6 +74,13 @@ class OptionsController {
         this.httpsButton.addEventListener('click', this.httpsButtonClick.bind(this));
         this.autoAddSingleTag.addEventListener('click', this.autoAddSingleTagClick.bind(this));
         this.credentialsManual.addEventListener('click', this.credentialsManualClick.bind(this));
+        this.llmProviderSelect.addEventListener('change', this.llmProviderChange.bind(this));
+        this.llmApiKeyInput.addEventListener('change', this.llmSettingsChange.bind(this));
+        this.llmModelInput.addEventListener('change', this.llmSettingsChange.bind(this));
+        this.llmBaseUrlInput.addEventListener('change', this.llmSettingsChange.bind(this));
+        this.llmOllamaUrlInput.addEventListener('change', this.llmSettingsChange.bind(this));
+        this.llmOllamaModelInput.addEventListener('change', this.llmSettingsChange.bind(this));
+        this.llmOllamaApiKeyInput.addEventListener('change', this.llmSettingsChange.bind(this));
     }
 
     httpsButtonClick () {
@@ -117,7 +133,7 @@ class OptionsController {
     saveToFileClick () {
         const body = document.querySelector('body');
         const textToSave = JSON.stringify(this.data);
-        const textToSaveAsBlob = new Blob([textToSave], { type: 'text/json' });
+        const textToSaveAsBlob = new Blob([textToSave], { type: 'text/plain' });
         const textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
         const fileNameToSaveAs = 'wallabag.json';
         const downloadLink = document.createElement('a');
@@ -132,6 +148,42 @@ class OptionsController {
 
     autoAddSingleTagClick (e) {
         Object.assign(this.data, { AutoAddSingleTag: this.autoAddSingleTag.checked });
+        this.port.postMessage({ request: 'setup-save', data: this.data });
+    }
+
+    llmProviderChange (e) {
+        const provider = this.llmProviderSelect.value;
+        this._updateLlmSectionVisibility(provider);
+        this._saveLlmSettings();
+    }
+
+    llmSettingsChange (e) {
+        this._saveLlmSettings();
+    }
+
+    _updateLlmSectionVisibility (provider) {
+        if (provider === 'openai') {
+            this._show(this.llmOpenAiSection);
+            this._hide(this.llmOllamaSection);
+        } else if (provider === 'ollama') {
+            this._hide(this.llmOpenAiSection);
+            this._show(this.llmOllamaSection);
+        } else {
+            this._hide(this.llmOpenAiSection);
+            this._hide(this.llmOllamaSection);
+        }
+    }
+
+    _saveLlmSettings () {
+        Object.assign(this.data, {
+            LlmProvider: this.llmProviderSelect.value,
+            LlmApiKey: this.llmApiKeyInput.value,
+            LlmModel: this.llmModelInput.value,
+            LlmBaseUrl: this.llmBaseUrlInput.value,
+            LlmOllamaUrl: this.llmOllamaUrlInput.value,
+            LlmOllamaModel: this.llmOllamaModelInput.value,
+            LlmOllamaApiKey: this.llmOllamaApiKeyInput.value
+        });
         this.port.postMessage({ request: 'setup-save', data: this.data });
     }
 
@@ -537,6 +589,17 @@ class OptionsController {
             this._hide(this.sitesToFetchLocallyEl);
         }
         this.setSitesToFetchLocallyUi();
+
+        // LLM settings
+        const provider = this.data.LlmProvider || 'disabled';
+        this.llmProviderSelect.value = provider;
+        this._updateLlmSectionVisibility(provider);
+        this.llmApiKeyInput.value = this.data.LlmApiKey || '';
+        this.llmModelInput.value = this.data.LlmModel || '';
+        this.llmBaseUrlInput.value = this.data.LlmBaseUrl || '';
+        this.llmOllamaUrlInput.value = this.data.LlmOllamaUrl || '';
+        this.llmOllamaModelInput.value = this.data.LlmOllamaModel || '';
+        this.llmOllamaApiKeyInput.value = this.data.LlmOllamaApiKey || '';
     }
 
     setSitesToFetchLocallyUi () {
