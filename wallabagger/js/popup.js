@@ -641,6 +641,27 @@ PopupController.prototype = {
                             const doc = window.document;
                             const metadata = {};
 
+                            // --- Generic: strip ad containers and third-party content-recommendation
+                            // widgets (Outbrain, Taboola). Not gated by hostname — aria-label="Advertisement"
+                            // is a standard a11y convention for ad slots, and Outbrain/Taboola widget
+                            // markup is identical across every site that embeds them.
+                            for (const el of doc.querySelectorAll('[aria-label*="advertisement" i], .OUTBRAIN, [id^="outbrain"], .trc_rr_container, [id^="taboola"], .taboola')) {
+                                el.remove();
+                            }
+
+                            // --- Generic: strip Tailwind's bare "hidden"/"invisible" visibility-utility
+                            // class tokens (not their breakpoint-prefixed variants like "lg:block" or
+                            // "md:hidden", which are left alone). These tokens are meaningless without
+                            // Tailwind's own generated CSS, but many other CSS frameworks — including,
+                            // commonly, a reader theme's own stylesheet — define an unconditional same-
+                            // named utility (`.hidden { display: none }`, `.invisible { visibility:
+                            // hidden }`). A page that server-renders desktop/mobile variants behind
+                            // Tailwind's "hidden <breakpoint>:block" idiom then has its entire content
+                            // silently hidden once saved, even though the HTML still contains it in full.
+                            for (const el of doc.querySelectorAll('.hidden, .invisible')) {
+                                el.classList.remove('hidden', 'invisible');
+                            }
+
                             // Helper: recursively find a key in a nested object/array
                             const findInObj = (obj, key, depth) => {
                                 if (depth > 6 || typeof obj !== 'object' || !obj) return null;
@@ -1184,6 +1205,124 @@ PopupController.prototype = {
                                 }
                             }
 
+                            // --- nationalreview.com cleanup ---
+                            const isNationalReview = /(^|\.)nationalreview\.com$/.test(window.location.hostname);
+                            if (isNationalReview) {
+                                // Strip the Carbonatix audio player, in-article "more from author"/ad
+                                // asides, share/comment button bars, the trailing comments widget
+                                // (and its scripts), and the "Most Popular" recirc article cards that
+                                // follow the real article — none of this is article content, but it
+                                // survives server-side extraction and pollutes the saved article.
+                                for (const el of doc.querySelectorAll('.tts-player, .article-share-bar, aside, article.post-list-article, .article-below-content')) {
+                                    el.remove();
+                                }
+                            }
+
+                            // --- Brix-template (POLITICO CMS) right rail + newsletter signup cleanup ---
+                            // Feature-detected via the template's own data-testid rather than hostname,
+                            // so it also covers other properties built on the same Brix templates.
+                            // The right column is a purely decorative ad/promo rail — a plain DOM
+                            // sibling of the real article content, with nothing marking it as
+                            // non-article — and the newsletter form is a promotional insert with no
+                            // article text of its own. Neither is article content, but both survive
+                            // server-side extraction and pollute the saved article.
+                            if (doc.querySelector('[data-testid="article-column-right"]')) {
+                                for (const el of doc.querySelectorAll('[data-testid="article-column-right"], .newsletter-signup')) {
+                                    el.remove();
+                                }
+                            }
+
+                            // --- Generic: strip "listen to article" / "keep reading" widgets ---
+                            // Walk up from a marker element to the nearest ancestor whose *parent* is
+                            // a semantic content boundary, then remove that ancestor — the same
+                            // toolbar-removal shape as the thedispatch.com rule above, generalized so
+                            // it isn't tied to one site's markup.
+                            const removeAncestorBlock = (el) => {
+                                let node = el;
+                                while (node.parentElement && node.parentElement !== doc.body) {
+                                    const parent = node.parentElement;
+                                    if (['ARTICLE', 'MAIN', 'SECTION'].includes(parent.tagName)) break;
+                                    node = parent;
+                                }
+                                node.remove();
+                                return node;
+                            };
+                            const contentRoot = doc.querySelector('article, main') || doc.body;
+
+                            // A growing number of publishers ship a "listen to this article" TTS
+                            // control near the top of the article, often bundled in the same hero
+                            // wrapper as a duplicate <h1> headline. Anchor on the control's accessible
+                            // name (not just any <audio> tag) so a legitimate embedded audio/podcast
+                            // player in the body text is left alone; a substring match tolerates the
+                            // wording varying by site.
+                            const listenControl = [...contentRoot.querySelectorAll('button, [role="button"]')]
+                                .find(el => /\b(listen to (this |the )?(article|page)|play audio( of (this |the )?(page|article))?)\b/i
+                                    .test((el.getAttribute('aria-label') || el.textContent || '').trim()));
+                            // Some sites bundle the article's own byline date as plain text (no
+                            // <time>/JSON-LD/meta) inside this same hero wrapper — salvage it before
+                            // the wrapper is discarded, as a last-resort fallback for date extraction
+                            // below. Detached nodes stay fully queryable after .remove(), so read from
+                            // the wrapper after removing it.
+                            let heroPublishDateText = null;
+                            if (listenControl) {
+                                const removedHero = removeAncestorBlock(listenControl);
+                                heroPublishDateText = [...removedHero.querySelectorAll('p, span, div')]
+                                    .map(el => (el.textContent || '').trim())
+                                    .find(t => t.length >= 6 && t.length <= 40 && /[A-Za-z]{3,}/.test(t) && /\b(19|20)\d{2}\b/.test(t) && parseToIso(t))
+                                    || null;
+                            }
+
+                            // "Keep reading" / related-content recirculation carousels are promotional,
+                            // not article content, but survive extraction because they're made of real
+                            // anchor text. Match the *entire* heading text (not a substring) to keep
+                            // this from ever firing on a genuine subheading.
+                            const recircHeading = [...contentRoot.querySelectorAll('h1, h2, h3, h4, h5, h6')]
+                                .find(h => /^(keep reading|read more|related( articles?| stories| posts)?|you (might|may) also like|more (from|stories|like this)|recommended( for you)?|up next|continue reading|discover more)$/i
+                                    .test((h.textContent || '').trim()));
+                            if (recircHeading) removeAncestorBlock(recircHeading);
+
+                            // --- openai.com (and any site sharing the same component) tag-list +
+                            // author-byline footer cleanup ---
+                            // Feature-detected via the template's own data-testid rather than hostname.
+                            // "Author" alone is too common a legitimate heading to pattern-match
+                            // generically (e.g. research write-ups, book reviews), so this one block
+                            // needs a selector specific to the template.
+                            for (const el of doc.querySelectorAll('[data-testid="citations"]')) {
+                                el.remove();
+                            }
+
+                            // --- Generic: flatten single-paragraph wrappers inside the article body ---
+                            // wallabag extracts server-side with graby, which prefers schema.org's
+                            // itemprop="articleBody" and then prunes the chosen container with
+                            // php-readability's cleanConditionally(). That pass judges div/table/ul
+                            // and removes them on link density, text length and class weight — but
+                            // never touches a bare <p>. CMSes that wrap each paragraph in its own
+                            // gating div (BLOX/TownNews, which powers a large share of US local
+                            // papers, puts every paragraph in .subscriber-only) therefore hand graby
+                            // a container whose every child is individually prunable, and the article
+                            // can be pruned away in full — leaving an entry with no text at all.
+                            // Hoisting the paragraphs out of those wrappers puts them beyond the
+                            // pruner's reach. Unwrapping only ever moves nodes, so this cannot lose
+                            // content, and pages with no articleBody marker are left untouched.
+                            for (const body of doc.querySelectorAll('[itemprop="articleBody"]')) {
+                                // <noscript> renders only with scripting off, so it is never what the
+                                // reader saw — and it survives pruning (it isn't a div), which is how
+                                // a paywall's "this page requires Javascript" nag can end up as the
+                                // entire saved article.
+                                for (const el of body.querySelectorAll('noscript')) {
+                                    el.remove();
+                                }
+                                // Repeat to a fixed point: wrappers nest.
+                                for (let pass = 0; pass < 5; pass++) {
+                                    const wrappers = [...body.querySelectorAll('div')].filter(el => {
+                                        const kids = [...el.children];
+                                        return kids.length > 0 && kids.every(k => k.tagName === 'P');
+                                    });
+                                    if (!wrappers.length) break;
+                                    for (const el of wrappers) el.replaceWith(...el.childNodes);
+                                }
+                            }
+
                             // --- Extract author ---
                             // 1. JSON-LD
                             for (const script of doc.querySelectorAll('script[type="application/ld+json"]')) {
@@ -1282,6 +1421,13 @@ PopupController.prototype = {
                                     const iso = parseToIso(best);
                                     if (iso) metadata.publishedAt = iso;
                                 }
+                            }
+                            // 5. Byline date text salvaged before the hero/audio-player widget above
+                            // was stripped (plain text, no <time>/JSON-LD/meta backing it) — lowest
+                            // priority, since it's the least structured signal.
+                            if (!metadata.publishedAt && heroPublishDateText) {
+                                const iso = parseToIso(heroPublishDateText);
+                                if (iso) metadata.publishedAt = iso;
                             }
 
                             chrome.runtime.sendMessage({

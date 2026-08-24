@@ -5,6 +5,7 @@ import { PortManager } from './port-manager.js';
 import { BrowserUtils } from './utils/browser-utils.js';
 import { Logger } from './utils/logger.js';
 import { htmlToText, getLlmTagsOpenAi, getLlmTagsOllama, generateTwitterHeadlineOpenAi, generateTwitterHeadlineOllama } from './utils/llm-tagger.js';
+import { stripTrackingParams } from './utils/url-cleaner.js';
 
 const logger = new Logger('background');
 const api = new WallabagApi(logger);
@@ -521,10 +522,11 @@ function moveToDirtyCache (url) {
     }
 }
 
-async function savePageToWallabag (url, resetIcon, title, content, author, publishedAt) {
-    if (browserUtils.isServicePage(url, api.data.Url)) {
+async function savePageToWallabag (dirtyUrl, resetIcon, title, content, author, publishedAt) {
+    if (browserUtils.isServicePage(dirtyUrl, api.data.Url)) {
         return;
     }
+    const url = stripTrackingParams(dirtyUrl);
     await api.forceInit();
     if (api.checkParams() === false) {
         openOptionsPage();
@@ -692,7 +694,7 @@ async function applyTwitterHeadline (savedEntry, content, url) {
 
 const checkExist = (dirtyUrl) => {
     if (browserUtils.isServicePage(dirtyUrl, api.data.Url)) { return; }
-    const url = dirtyUrl.split('#')[0];
+    const url = stripTrackingParams(dirtyUrl.split('#')[0]);
     if (existCache.check(url)) {
         const existsFlag = existCache.get(url);
         if (existsFlag === existStates.exists) {
