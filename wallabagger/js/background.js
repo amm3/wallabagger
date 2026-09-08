@@ -6,6 +6,7 @@ import { BrowserUtils } from './utils/browser-utils.js';
 import { Logger } from './utils/logger.js';
 import { htmlToText, getLlmTagsOpenAi, getLlmTagsOllama, generateTwitterHeadlineOpenAi, generateTwitterHeadlineOllama } from './utils/llm-tagger.js';
 import { stripTrackingParams } from './utils/url-cleaner.js';
+import { extractArticleFromPage } from './utils/extract-article.js';
 
 const logger = new Logger('background');
 const api = new WallabagApi(logger);
@@ -68,19 +69,49 @@ if (isBetaVersion) {
     browser.action.setBadgeText({ text: 'ß' });
 }
 
+// The popup extracts the article in the browser before saving. The keyboard command and
+// the context menu used to skip that and post the URL alone, so the "retrieve content from
+// the browser" option had no effect on them and wallabag was left to fetch the page itself -
+// which is what fails on paywalled or JS-rendered articles. Both gestures grant activeTab,
+// which is the only page access this extension has (the manifest declares no host
+// permissions), so the same injection works from here.
+const saveTabWithLocalContent = async (tab, url, resetIcon) => {
+    const canInject = tab && typeof tab.id === 'number' && tab.id >= 0 &&
+        !browserUtils.isServicePage(url, api.data.Url) && !browserUtils.isRestrictedPage(url);
+    if (canInject) {
+        try {
+            const injections = await browser.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: extractArticleFromPage
+            });
+            const payload = injections && injections[0] && injections[0].result;
+            if (payload && payload.wallabagSaveArticleContent) {
+                const metadata = payload.wallabagMetadata || {};
+                savePageToWallabag(url, resetIcon, tab.title, payload.wallabagSaveArticleContent, metadata.author, metadata.publishedAt);
+                return;
+            }
+            logger.log('local extraction returned nothing, saving the URL alone');
+        } catch (error) {
+            logger.error('local extraction failed, saving the URL alone', error);
+        }
+    }
+    savePageToWallabag(url, resetIcon);
+};
+
 const addListeners = () => {
     logger.groupCollapsed('addListeners');
     logger.log('starting');
 
     logger.log('adding onClicked listener');
-    browser.contextMenus.onClicked.addListener(async (info) => {
+    browser.contextMenus.onClicked.addListener(async (info, tab) => {
         await api.forceInit();
         switch (info.menuItemId) {
             case 'wallabagger-add-link':
                 if (typeof (info.linkUrl) === 'string' && info.linkUrl.length > 0) {
+                    // A link target is not open in any tab, so there is nothing to extract.
                     savePageToWallabag(info.linkUrl, true);
                 } else {
-                    savePageToWallabag(info.pageUrl, false);
+                    await saveTabWithLocalContent(tab, info.pageUrl || (tab && tab.url), false);
                 }
                 break;
             case 'options':
@@ -99,11 +130,10 @@ const addListeners = () => {
     logger.log('adding onCommand listener');
     browser.commands.onCommand.addListener(async (command) => {
         if (command === 'wallabag-it') {
-            browser.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                if (tabs[0] != null) {
-                    savePageToWallabag(tabs[0].url, false);
-                }
-            });
+            const tab = await browserUtils.getActiveTab().catch(() => null);
+            if (tab != null) {
+                await saveTabWithLocalContent(tab, tab.url, false);
+            }
         }
     });
 
@@ -420,6 +450,7 @@ const browserIcon = {
         default: browser.runtime.getManifest().action.default_icon,
         good: '/img/wallabagger-green.' + imageExtension,
         wip: '/img/wallabagger-yellow.' + imageExtension,
+        warn: '/img/wallabagger-yellow.' + imageExtension,
         bad: '/img/wallabagger-red.' + imageExtension
     },
 
@@ -495,6 +526,31 @@ function applyDirtyCacheReal (key, data) {
     }
     return data;
 }
+// wallabag's own placeholder body, stored whenever its extractor produced nothing.
+// The wording comes from the wallabag.fetching_error_message parameter, so an admin can
+// change it, but the default is stable across releases.
+const FETCH_FAILURE_PATTERN = /wallabag[^<]*(retrieve|troubleshoot)/i;
+
+// is_not_parsed only exists from wallabag 2.7 (migration Version20230728093912); on 2.6
+// and earlier the field is absent from the API response entirely, so fall back to
+// recognising the placeholder in the entry body that the flag would have described.
+function isUnparsedEntry (data) {
+    if (!data) {
+        return false;
+    }
+    if (typeof data.is_not_parsed === 'boolean') {
+        return data.is_not_parsed;
+    }
+    const content = typeof data.content === 'string' ? data.content : '';
+    if (content === '') {
+        return false;
+    }
+    const text = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    // The placeholder is always at the start; wallabag may append a short description
+    // after it, so only the head is worth matching against.
+    return FETCH_FAILURE_PATTERN.test(text.slice(0, 200)) || (data.reading_time === 0 && text.length < 200);
+}
+
 function cutArticle (data) {
     return Object.assign({}, {
         id: data.id,
@@ -504,7 +560,11 @@ function cutArticle (data) {
         url: data.url,
         tags: data.tags,
         domain_name: data.domain_name,
-        preview_picture: data.preview_picture
+        preview_picture: data.preview_picture,
+        // Whether the entry body is just wallabag's "can't retrieve contents for this
+        // article" placeholder. Dropping this used to let a failed save show a green tick.
+        is_not_parsed: isUnparsedEntry(data),
+        http_status: data.http_status
     });
 }
 
@@ -569,16 +629,46 @@ async function savePageToWallabag (dirtyUrl, resetIcon, title, content, author, 
     if (author) savePageOptions.author = author;
     if (publishedAt) savePageOptions.publishedAt = publishedAt;
 
-    const promise = api.SavePage(savePageOptions);
+    // wallabag answers 200 even when its own extractor found nothing and stored the
+    // "wallabag can't retrieve contents for this article" placeholder instead. When that
+    // happens to a request that went out URL-only, but the browser did hand us the page
+    // HTML, send it: wallabag's prefetch path skips the server-side fetch that just failed.
+    const saveWithRetry = async () => {
+        const data = await api.SavePage(savePageOptions);
+        const unparsed = isUnparsedEntry(data);
+        logger.log('save result', {
+            unparsed,
+            sentContent: Boolean(data && data.sentContent),
+            attemptedContent: Boolean(data && data.attemptedContent),
+            haveLocalContent: Boolean(content),
+            is_not_parsed: data && data.is_not_parsed,
+            http_status: data && data.http_status,
+            reading_time: data && data.reading_time,
+            contentChars: data && typeof data.content === 'string' ? data.content.length : 0
+        });
+        if (unparsed && !data.attemptedContent && content) {
+            logger.log('entry stored unparsed, retrying with content from the browser');
+            return api.SavePage(Object.assign({}, savePageOptions, { title, content }));
+        }
+        return data;
+    };
+
+    const promise = saveWithRetry();
     promise
         .then(data => applyDirtyCacheLight(url, data))
         .then(async data => {
             if (!data.deleted) {
-                browserIcon.set('good');
+                const isNotParsed = isUnparsedEntry(data);
+                browserIcon.set(isNotParsed ? 'warn' : 'good');
                 postIfConnected({ response: 'article', article: cutArticle(data) });
                 cache.set(url, cutArticle(data));
                 saveExistFlag(url, existStates.exists);
-                if (api.data.AllowExistCheck !== true || resetIcon) {
+                if (isNotParsed) {
+                    // The entry exists but holds wallabag's placeholder, so keep the card on
+                    // screen (it is still taggable) and warn rather than reporting success.
+                    browserIcon.timedToDefault();
+                    postIfConnected({ response: 'warning', text: Common.translate('Saved_but_wallabag_could_not_retrieve_the_content') });
+                } else if (api.data.AllowExistCheck !== true || resetIcon) {
                     browserIcon.timedToDefault();
                 }
 

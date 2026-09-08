@@ -54,8 +54,17 @@ FetchApi.prototype = {
                 try {
                     err = JSON.parse(text);
                 } catch {
+                    err = null;
+                }
+                if (err === null || typeof err !== 'object') {
                     err = new Error(`HTTP ${response.status} ${response.statusText}`);
                 }
+                // Always carry the numeric status on the rejection value. A JSON error
+                // body parses into a plain object whose `message` (when it has one) is
+                // the server's wording, so callers had no reliable way to recognise a
+                // specific status - notably 413, which SavePage needs in order to retry
+                // with a smaller payload instead of silently degrading to a URL-only save.
+                err.status = response.status;
                 return Promise.reject(err);
             });
         });

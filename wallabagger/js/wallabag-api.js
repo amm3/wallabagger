@@ -263,6 +263,19 @@ WallabagApi.prototype = {
             return body;
         };
 
+        // Drops what costs the most bytes and is of no use to wallabag's extractor:
+        // scripts (except JSON-LD, which graby reads for date/author), stylesheets,
+        // comments, noscript/template blocks and base64-inlined assets. Usually removes
+        // well over half of a modern article page.
+        const shrinkHtml = (html) => html
+            .replace(/<!--[\s\S]*?-->/g, '')
+            .replace(/<script\b([^>]*)>[\s\S]*?<\/script\s*>/gi, (match, attrs) => /ld\+json/i.test(attrs) ? match : '')
+            .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, '')
+            .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript\s*>/gi, '')
+            .replace(/<template\b[^>]*>[\s\S]*?<\/template\s*>/gi, '')
+            .replace(/\s(?:src|srcset|href)\s*=\s*"data:[^"]*"/gi, '')
+            .replace(/\s(?:src|srcset|href)\s*=\s*'data:[^']*'/gi, '');
+
         const extractArticle = (html) => {
             const start = html.indexOf('<article');
             if (start === -1) return null;
@@ -271,30 +284,63 @@ WallabagApi.prototype = {
             return html.slice(start, end + '</article>'.length);
         };
 
-        const is413 = (error) => error.message && error.message.startsWith('HTTP 413');
+        // A JSON error body rejects with the parsed object, an HTML one (nginx's default
+        // 413 page) with an Error - so check the status carried by both, and keep the
+        // message check for anything that predates it.
+        const is413 = (error) => Boolean(error) &&
+            (error.status === 413 || (typeof error.message === 'string' && error.message.startsWith('HTTP 413')));
+
+        // Progressively smaller payloads, tried in order as the server rejects each one as
+        // too large. Only the final rung gives up on the locally fetched content and lets
+        // wallabag fetch the page itself - which is exactly what fails on paywalled or
+        // JS-rendered articles, leaving the entry holding wallabag's "can't retrieve
+        // contents for this article" placeholder.
+        const buildAttempts = () => {
+            const attempts = [];
+            if (options.content) {
+                // Shrink up front rather than only as a 413 fallback. On a large news site
+                // the scripts and inline preload JSON are most of the payload and none of it
+                // is article content, so posting the raw document buys nothing and risks the
+                // server's body limit - past which the ladder ends at a URL-only save and
+                // wallabag has to fetch a page that may well block it.
+                const shrunk = shrinkHtml(options.content);
+                this.logger.log('shrunk content', options.content.length, '->', shrunk.length, 'chars');
+                attempts.push({ label: 'content', content: shrunk });
+                const article = extractArticle(shrunk);
+                if (article && article.length < shrunk.length) {
+                    attempts.push({ label: '<article> excerpt', content: article });
+                }
+            }
+            attempts.push({ label: 'URL only', content: null });
+            return attempts;
+        };
 
         const entriesUrl = `${this.data.Url}/api/entries.json`;
-        return this.CheckToken()
-            .then(() => this.fetchApi.Post(entriesUrl, this.data.ApiToken, buildBody(options.content)))
-            .catch(error => {
-                if (!is413(error) || !options.content) throw error;
-                const article = extractArticle(options.content);
-                if (article) {
-                    this.logger.log('413 on full content, retrying with <article> excerpt', article.length, 'chars');
-                    return this.fetchApi.Post(entriesUrl, this.data.ApiToken, buildBody(article));
-                }
-                this.logger.log('413 on full content, no <article> found, falling back to URL only');
-                return this.fetchApi.Post(entriesUrl, this.data.ApiToken, buildBody(null));
-            })
-            .catch(error => {
-                if (!is413(error)) throw error;
-                this.logger.log('413 on <article> excerpt, falling back to URL only');
-                return this.fetchApi.Post(entriesUrl, this.data.ApiToken, buildBody(null));
-            })
-            .catch(error => {
-                throw new Error(`Failed to save page ${entriesUrl}
+        return this.CheckToken().then(async () => {
+            const attempts = buildAttempts();
+            for (let i = 0; i < attempts.length; i++) {
+                try {
+                    const saved = await this.fetchApi.Post(entriesUrl, this.data.ApiToken, buildBody(attempts[i].content));
+                    if (saved && typeof saved === 'object') {
+                        // Report which rung actually went out, and whether content was in
+                        // play at all. The caller retries an unparsed entry only when no
+                        // content was ever offered: if the ladder did offer it and the
+                        // server rejected every rung as too large, sending it again is
+                        // guaranteed to fail the same way.
+                        saved.sentContent = Boolean(attempts[i].content);
+                        saved.attemptedContent = Boolean(options.content);
+                    }
+                    return saved;
+                } catch (error) {
+                    const isLastAttempt = i === attempts.length - 1;
+                    if (isLastAttempt || !is413(error)) {
+                        throw new Error(`Failed to save page ${entriesUrl}
                 ${error.message}`);
-            });
+                    }
+                    this.logger.log(`413 on ${attempts[i].label}, retrying with ${attempts[i + 1].label}`);
+                }
+            }
+        });
     },
 
     RefreshToken: function () {

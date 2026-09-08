@@ -199,6 +199,10 @@
       "description": "Options",
       "message": "Save to file"
    },
+   "Saved_but_wallabag_could_not_retrieve_the_content": {
+      "description": "Background",
+      "message": "Saved, but wallabag couldn't retrieve the content. Try \"reload content\" in wallabag, or check that the site isn't blocking it."
+   },
    "Saving_tags": {
       "description": "Popup",
       "message": "Saving tags…"
