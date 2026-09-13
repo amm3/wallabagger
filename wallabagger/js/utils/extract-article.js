@@ -421,6 +421,32 @@ const extractArticleFromPage = () => {
             return { sourceName, articleText };
         };
 
+        // Extract <img> elements for photos attached to the post. The photo sits in its
+        // own text-less child of the post container, which the shared-card path discards.
+        // Facebook tags feed photos with data-imgperflogname="feedImage"; fall back to
+        // large images inside /photo links for layouts without it. Comments are
+        // role="article" and carry avatars and attached images, so skip those.
+        const extractFbPhotos = (node) => {
+            const imgs = [];
+            const seen = new Set();
+            const candidates = [
+                ...node.querySelectorAll('img[data-imgperflogname="feedImage"]'),
+                ...[...node.querySelectorAll('a[href*="/photo"] img')].filter(img =>
+                    (img.naturalWidth || parseInt(img.getAttribute('width'), 10) || 0) >= 200)
+            ];
+            for (const img of candidates) {
+                if (img.closest('[role="article"]')) continue;
+                // Keep src verbatim: fbcdn URLs are signed and break if the query is altered
+                const src = (img.getAttribute('src') || '').trim();
+                if (!src || src.startsWith('data:') || seen.has(src)) continue;
+                seen.add(src);
+                const alt = escText(img.getAttribute('alt'));
+                const escapedSrc = src.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                imgs.push(`<img src="${escapedSrc}" alt="${alt}" style="max-width:100%;">`);
+            }
+            return imgs;
+        };
+
         // Extract post creation time from embedded JSON in the page source
         const extractFbCreationTime = (authorLink) => {
             const href = authorLink.getAttribute('href') || '';
@@ -472,6 +498,7 @@ const extractArticleFromPage = () => {
                     }
 
                     const outputParts = extractFbParagraphs(mainTextNode);
+                    outputParts.push(...extractFbPhotos(postContentNode));
 
                     if (sharedCardNode !== null) {
                         const { sourceName, articleText } = extractFbSharedCard(sharedCardNode);
@@ -716,6 +743,72 @@ const extractArticleFromPage = () => {
         .find(h => /^(keep reading|read more|related( articles?| stories| posts)?|you (might|may) also like|more (from|stories|like this)|recommended( for you)?|up next|continue reading|discover more)$/i
             .test((h.textContent || '').trim()));
     if (recircHeading) removeAncestorBlock(recircHeading);
+
+    // --- Generic: strip mid-article "Read: <other piece>" recirc cards ---
+    // Publishers drop links to their own pieces between paragraphs: a card or
+    // paragraph whose whole text is a short label ("Read", "Read more:",
+    // "Related:") plus the other article's title. Not being a heading, the
+    // rule above never sees it, and wallabag's pruner keeps its text but drops
+    // the <a>, so the saved entry carries orphan "Read" / "<title>" paragraphs.
+    //
+    // Match on shape rather than markup: a block holding exactly one link, to
+    // this same site, and no text besides that link and a recirc label. The
+    // same-site test keeps "See also: <external source>" citations. Climb to
+    // the highest ancestor still of that shape so the card's wrapper goes too,
+    // stopping as soon as the next one up would take article text with it.
+    //
+    // Such cards usually come framed by a rule on each side; drop those too
+    // when both are present so no doubled <hr> is left between paragraphs, but
+    // leave a lone one, which may be a genuine section break.
+    const isRuleOnly = (el) => !!el && !(el.textContent || '').trim()
+        && (el.tagName === 'HR' || (el.children.length === 1 && el.children[0].tagName === 'HR'));
+    const removeWithFlankingRules = (el) => {
+        const prev = el.previousElementSibling;
+        const next = el.nextElementSibling;
+        if (isRuleOnly(prev) && isRuleOnly(next)) {
+            prev.remove();
+            next.remove();
+        }
+        el.remove();
+    };
+    const RECIRC_LABEL = /^(read( more| next| also)?|also read|related( articles?| stories| posts| coverage| reading)?|see also|more on this|recommended( reading)?|don['’]t miss|further reading|keep reading|must read)\s*[:|—-]?$/i;
+    const bareHost = (h) => h.replace(/^www\./, '');
+    const textOutside = (root, anchor) => {
+        const parts = [];
+        const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+            if (!anchor.contains(n)) parts.push(n.nodeValue);
+        }
+        return parts.join(' ').replace(/\s+/g, ' ').trim();
+    };
+    for (const anchor of [...contentRoot.querySelectorAll('a[href]')]) {
+        if (!anchor.isConnected) continue;
+        let sameSite = false;
+        try {
+            sameSite = bareHost(new URL(anchor.getAttribute('href'), window.location.href).hostname) === bareHost(window.location.hostname);
+        } catch (e) {}
+        const title = textLength(anchor);
+        if (!sameSite || title === 0 || title > 200) continue;
+        let best = null;
+        let node = anchor;
+        for (let depth = 0; depth < 6; depth++) {
+            const parent = node.parentElement;
+            if (!parent || parent === contentRoot || parent === doc.body) break;
+            if (parent.querySelectorAll('a[href]').length !== 1) break;
+            const rest = textOutside(parent, anchor);
+            if (rest && !RECIRC_LABEL.test(rest)) break;
+            if (rest) best = parent;
+            node = parent;
+        }
+        if (best) removeWithFlankingRules(best);
+    }
+
+    // Substack's own component for the same card, feature-detected by its
+    // component name so it holds on every Substack publication even when the
+    // label wording changes or the card points at another publication.
+    for (const el of doc.querySelectorAll('[data-component-name="DigestPostEmbed"]')) {
+        removeWithFlankingRules(el);
+    }
 
     // --- openai.com (and any site sharing the same component) tag-list +
     // author-byline footer cleanup ---
