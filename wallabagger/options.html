@@ -277,6 +277,18 @@
                     <ol id="sites-to-fetch-locally-add-list" class="sites-list"></ol>
                 </div>
 
+                <div id="sites-to-send-url-only" class="form-group d-hide">
+                    <h4 data-i18n="Sites_send_url_only_title">Exceptions</h4>
+                    <p data-i18n="Sites_send_url_only_explaination">Enter the address of a website for which you want wallabag to fetch the page itself from its URL instead of receiving the browser content.</p>
+                    <form action="." id="sites-to-send-url-only-add-form">
+                        <div class="input-group input-group--sites">
+                            <input type="url" id="sites-to-send-url-only-add-input" class="form-input" autocomplete="off" required />
+                            <button class="btn input-group-btn" data-i18n-attr="title|Add_site">+</button>
+                        </div>
+                    </form>
+                    <ol id="sites-to-send-url-only-add-list" class="sites-list"></ol>
+                </div>
+
                 <h3 data-i18n="Tags">Tags</h3>
 
                 <div class="form-group">

@@ -87,7 +87,7 @@ const saveTabWithLocalContent = async (tab, url, resetIcon) => {
             const payload = injections && injections[0] && injections[0].result;
             if (payload && payload.wallabagSaveArticleContent) {
                 const metadata = payload.wallabagMetadata || {};
-                savePageToWallabag(url, resetIcon, tab.title, payload.wallabagSaveArticleContent, metadata.author, metadata.publishedAt);
+                savePageToWallabag(url, resetIcon, metadata.title || tab.title, payload.wallabagSaveArticleContent, metadata.author, metadata.publishedAt);
                 return;
             }
             logger.log('local extraction returned nothing, saving the URL alone');

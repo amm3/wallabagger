@@ -636,6 +636,15 @@ PopupController.prototype = {
                 this.logger.log('postMessage');
                 const saveMsg = { request: 'save', tabUrl: tab.url, title: tab.title, content: event.wallabagSaveArticleContent };
                 if (event.wallabagMetadata) {
+                    if (event.wallabagMetadata.title) {
+                        saveMsg.title = event.wallabagMetadata.title;
+                        // Keep the card in step with what is actually being saved.
+                        // editIconClick prefills the title editor from this element
+                        // and saveTitleClick PATCHes whatever it holds, so leaving
+                        // the tab title here would let a user who opens the editor
+                        // during the save put the outlet name straight back in.
+                        this.cardTitle.textContent = event.wallabagMetadata.title;
+                    }
                     if (event.wallabagMetadata.author) saveMsg.author = event.wallabagMetadata.author;
                     if (event.wallabagMetadata.publishedAt) saveMsg.publishedAt = event.wallabagMetadata.publishedAt;
                 }

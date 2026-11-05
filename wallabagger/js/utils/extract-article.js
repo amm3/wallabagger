@@ -607,6 +607,120 @@ const extractArticleFromPage = () => {
         // Commentary not found or empty — fall through to generic extraction
     }
 
+    // --- Capture headline candidates, before anything is removed ---
+    // Everything above this point only reads the DOM; everything below it
+    // deletes nodes. The hero rule in particular removes a wrapper that, per
+    // its own comment, "often bundle[s] a duplicate <h1> headline", so by the
+    // time the rest of the metadata is extracted at the bottom of this
+    // function the article's own <h1> may already be gone. Capture the raw
+    // candidates here and decide between them down there — the same
+    // salvage-before-removal shape as heroPublishDateText.
+    //
+    // Sitting below the Twitter/Facebook/LinkedIn early returns is deliberate:
+    // their payloads never carry a title, which leaves the LLM headline that
+    // applyTwitterHeadline PATCHes in as the sole title authority on the four
+    // hosts it covers.
+    //
+    // Nothing here may consult visibility. The Tailwind class strip at the top
+    // of this function has already unhidden mobile/desktop duplicate headings,
+    // so offsetParent and computed style no longer mean anything on this page.
+    const titleSources = { docTitle: '', ogTitle: '', twTitle: '', ldHeadline: '', h1Texts: [], siteNames: [] };
+    try {
+        const squashWs = (s) => (s || '').replace(/\s+/g, ' ').trim();
+        const readMeta = (...names) => {
+            for (const name of names) {
+                const el = doc.querySelector(`meta[property="${name}"], meta[name="${name}"]`);
+                const val = el && el.getAttribute('content');
+                if (val && val.trim()) return val.trim();
+            }
+            return '';
+        };
+        const addSiteName = (val, explicit) => {
+            const name = typeof val === 'string' ? squashWs(val) : '';
+            if (name && name.length <= 60) titleSources.siteNames.push({ name, explicit });
+        };
+
+        titleSources.docTitle = squashWs(doc.title);
+        titleSources.ogTitle = squashWs(readMeta('og:title'));
+        titleSources.twTitle = squashWs(readMeta('twitter:title'));
+
+        // Flatten the JSON-LD blocks one level, including @graph. Picking the
+        // headline off a typed node rather than with findInObj matters: a news
+        // page's @graph routinely carries an ItemList of *other* articles, each
+        // with its own headline, and findInObj would happily return one.
+        const ldNodes = [];
+        for (const script of doc.querySelectorAll('script[type="application/ld+json"]')) {
+            try {
+                const data = JSON.parse(script.textContent);
+                for (const entry of (Array.isArray(data) ? data : [data])) {
+                    if (!entry || typeof entry !== 'object') continue;
+                    ldNodes.push(entry);
+                    if (Array.isArray(entry['@graph'])) {
+                        for (const node of entry['@graph']) {
+                            if (node && typeof node === 'object') ldNodes.push(node);
+                        }
+                    }
+                }
+            } catch (e) {}
+        }
+        const isArticleType = (t) => typeof t === 'string' && /(Article|BlogPosting|Posting|Report|Review)$/i.test(t);
+        for (const node of ldNodes) {
+            const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
+            if (!types.some(isArticleType)) continue;
+            if (typeof node.headline === 'string' && node.headline.trim()) {
+                titleSources.ldHeadline = squashWs(node.headline);
+                break;
+            }
+        }
+        if (!titleSources.ldHeadline) {
+            const loose = findInObj(ldNodes, 'headline', 0);
+            if (typeof loose === 'string' && loose.trim()) titleSources.ldHeadline = squashWs(loose);
+        }
+
+        // Publisher names. A wrong one here is inert: matching below is
+        // whole-segment equality, so a name that never appears in the title
+        // simply never fires.
+        addSiteName(readMeta('og:site_name'), true);
+        for (const node of ldNodes) {
+            for (const key of ['publisher', 'isPartOf', 'sourceOrganization']) {
+                const org = node[key];
+                if (typeof org === 'string') { addSiteName(org, true); continue; }
+                if (org && typeof org === 'object') {
+                    addSiteName(org.name, true);
+                    addSiteName(org.alternateName, true);
+                }
+            }
+        }
+        addSiteName(readMeta('application-name', 'apple-mobile-web-app-title'), true);
+        // Hostname-derived names are marked inexplicit: they are single common
+        // words often enough (time.com, wired.com, slate.com) that they are
+        // only trusted to strip a *trailing* segment, never a leading one.
+        const host = (window.location.hostname || '').replace(/^www\./, '');
+        if (host) {
+            addSiteName(host, false);
+            const label = host.split('.')[0];
+            if (label && label !== host) addSiteName(label, false);
+        }
+
+        const collectH1 = (root) => {
+            const seen = new Set();
+            const texts = [];
+            for (const el of root.querySelectorAll('h1')) {
+                const text = squashWs(el.textContent);
+                if (!text || text.length > 300 || seen.has(text)) continue;
+                seen.add(text);
+                texts.push(text);
+                if (texts.length >= 5) break;
+            }
+            return texts;
+        };
+        const titleRoot = doc.querySelector('article, main') || doc.body;
+        titleSources.h1Texts = collectH1(titleRoot);
+        if (!titleSources.h1Texts.length && titleRoot !== doc.body) {
+            titleSources.h1Texts = collectH1(doc.body);
+        }
+    } catch (e) {}
+
     // --- thedispatch.com toolbar cleanup and content extraction ---
     const isDispatch = /thedispatch\.com$/.test(window.location.hostname);
     const dispatchBody = isDispatch ? doc.getElementById('article-body') : null;
@@ -658,6 +772,86 @@ const extractArticleFromPage = () => {
         }
     }
 
+    // --- newsnationnow.com cleanup and content scoping ---
+    // There is no graby site config for this host, so wallabag's readability
+    // pass picks the container itself, and on NewsNation it keeps the whole
+    // #content column: two "More Stories" rails, "Trending on NewsNation",
+    // ad-slot shells, the comments box and the promo widgets wrapped around
+    // the story. The generic recirc-heading rule below goes by headings, so
+    // the most it can take out is the two "More Stories" rails.
+    //
+    // The story itself sits in one template-stable container,
+    // main > article[data-component="article"], with the text in that
+    // article's direct-child .article-content (direct child, because the
+    // inline promo cards stripped below reuse the same class). So clean up
+    // inside the article, and further down send that article alone as the
+    // payload, which leaves every rail and all of the site chrome behind
+    // without having to list them. Pages without that shape (the homepage,
+    // section and video pages) are left to the generic handling.
+    const isNewsNation = /(^|\.)newsnationnow\.com$/.test(window.location.hostname);
+    let newsNationArticle = null;
+    if (isNewsNation) {
+        const article = doc.querySelector('main article[data-component="article"]');
+        const body = article && article.querySelector(':scope > .article-content');
+        if (body) {
+            newsNationArticle = article;
+            const header = article.querySelector(':scope > header');
+
+            // The headline picker gives up on <h1> when the page has two
+            // different ones, and the Sailthru newsletter signup that some
+            // stories embed brings its own ("Your Morning Newsletter"). The
+            // fallback is <title>, which here is an SEO variant that can
+            // differ from the displayed headline. Offer only the article's own
+            // <h1>; it still has to be corroborated like any other candidate.
+            const headline = header && header.querySelector('h1');
+            const headlineText = headline ? headline.textContent.replace(/\s+/g, ' ').trim() : '';
+            if (headlineText) titleSources.h1Texts = [headlineText];
+
+            // AP feed posts have no NewsArticle JSON-LD, no author meta and a
+            // byline that is a bare <span>, so none of the author sources
+            // below find anyone. Take the byline as displayed, one entry per
+            // name; the JSON-LD step below replaces it whenever JSON-LD does
+            // name an author, as it does on staff and syndicated stories.
+            // wallabag splits the authors field on bare commas and does not
+            // trim, hence the join.
+            const byline = header && header.querySelector('.article-meta > p');
+            const authors = byline
+                ? byline.textContent.replace(/\s+/g, ' ').split(/,|\sand\s/i).map(name => name.trim()).filter(Boolean)
+                : [];
+            if (authors.length) metadata.author = authors.join(',');
+
+            // None of this is story text: the promo text widgets above and
+            // below the story, the Instaread "Audio Article" player, Minute
+            // Media and Nexstar video players (the lead one leaves a floating
+            // "NOW PLAYING" bar), ad slots, inline "related story" links (no
+            // "Read:" label, so the generic recirc-card rule misses them), the
+            // Sailthru newsletter signup, CivicScience polls, the "Add as
+            // preferred source on Google" button and CTA group, the category
+            // and copyright footer, the Taboola block and Viafoura comments.
+            for (const el of article.querySelectorAll('[data-component="dropzoneWidget"], instaread-player, .instaread-audio-player, .nexstar-minutemedia-player-container, .wp-block-nexstar-video, .ad-unit, .nlp-ignore-block, .promo-link, .sailthru_shortcode, .civic-science-container, .civic-science-article-container, .nexstar-google-preferred-sources, .article-content-cta-group, .article-footer, .nexstar-taboola-block, .viafoura')) {
+                el.remove();
+            }
+
+            // Most of the header is metadata wallabag gets separately: the
+            // headline and byline were read above and the date comes from
+            // article:published_time. The story content in it moves to the
+            // top of the story before the header is dropped: the synopsis
+            // (a dek, left out when it only repeats a sentence of the story,
+            // as it usually does - it is often the lede verbatim) and a lead
+            // photo with its caption credit. A lead video has no <img> left
+            // by now.
+            const storyText = body.textContent.replace(/\s+/g, ' ');
+            const synopsis = header && header.querySelector('.article-synopsis');
+            const synopsisText = synopsis ? synopsis.textContent.replace(/\s+/g, ' ').trim() : '';
+            const leadMedia = header && header.querySelector('figure.article-featured-media');
+            const lead = [];
+            if (synopsisText && !storyText.includes(synopsisText)) lead.push(synopsis);
+            if (leadMedia && leadMedia.querySelector('img')) lead.push(leadMedia);
+            body.prepend(...lead);
+            if (header) header.remove();
+        }
+    }
+
     // --- Brix-template (POLITICO CMS) right rail + newsletter signup cleanup ---
     // Feature-detected via the template's own data-testid rather than hostname,
     // so it also covers other properties built on the same Brix templates.
@@ -692,9 +886,11 @@ const extractArticleFromPage = () => {
     const MAX_REMOVABLE_TEXT_RATIO = 0.25;
     const MIN_ALWAYS_REMOVABLE_TEXT = 400;
     const textLength = (el) => (el.textContent || '').replace(/\s+/g, ' ').trim().length;
+    const removalBudget = () => Math.max(MIN_ALWAYS_REMOVABLE_TEXT, textLength(contentRoot) * MAX_REMOVABLE_TEXT_RATIO);
 
-    const removeAncestorBlock = (el) => {
-        const budget = Math.max(MIN_ALWAYS_REMOVABLE_TEXT, textLength(contentRoot) * MAX_REMOVABLE_TEXT_RATIO);
+    // The block removeAncestorBlock would take for el under this budget, left
+    // in place; null when even el alone is over it.
+    const findAncestorBlock = (el, budget) => {
         let node = el;
         while (node.parentElement && node.parentElement !== doc.body) {
             const parent = node.parentElement;
@@ -705,7 +901,11 @@ const extractArticleFromPage = () => {
         if (textLength(node) > budget) {
             return null;
         }
-        node.remove();
+        return node;
+    };
+    const removeAncestorBlock = (el) => {
+        const node = findAncestorBlock(el, removalBudget());
+        if (node) node.remove();
         return node;
     };
     const contentRoot = doc.querySelector('article, main') || doc.body;
@@ -739,10 +939,34 @@ const extractArticleFromPage = () => {
     // not article content, but survive extraction because they're made of real
     // anchor text. Match the *entire* heading text (not a substring) to keep
     // this from ever firing on a genuine subheading.
-    const recircHeading = [...contentRoot.querySelectorAll('h1, h2, h3, h4, h5, h6')]
-        .find(h => /^(keep reading|read more|related( articles?| stories| posts)?|you (might|may) also like|more (from|stories|like this)|recommended( for you)?|up next|continue reading|discover more)$/i
+    //
+    // A page can run more than one of these rails (NewsNation has two "More
+    // Stories" rails in <main>), so take every match. Pick all the blocks
+    // first, against the untouched page, so each is exactly the block and
+    // budget that match would get on its own. Re-measuring after each removal
+    // misjudges the later ones: the page shrinks, so the budget drops and a
+    // second rail no bigger than the first gets cut down to its bare heading,
+    // leaving its links behind; and the wrappers shrink too, so one holding a
+    // rail, a paragraph and another rail can fit the budget once the first
+    // rail is gone, and the next climb takes the paragraph with it.
+    //
+    // Each block is still held to the budget; together they are also held to
+    // half the page, so a run of false-positive headings can't strip an
+    // article one budget at a time. The first match always fits.
+    const MAX_RECIRC_TEXT_RATIO = 0.5;
+    const recircHeadings = [...contentRoot.querySelectorAll('h1, h2, h3, h4, h5, h6')]
+        .filter(h => /^(keep reading|read more|related( articles?| stories| posts)?|you (might|may) also like|more (from|stories|like this)|recommended( for you)?|up next|continue reading|discover more)$/i
             .test((h.textContent || '').trim()));
-    if (recircHeading) removeAncestorBlock(recircHeading);
+    const recircBudget = removalBudget();
+    let recircAllowance = Math.max(recircBudget, textLength(contentRoot) * MAX_RECIRC_TEXT_RATIO);
+    for (const block of recircHeadings.map(h => findAncestorBlock(h, recircBudget))) {
+        // A match inside an earlier match's block went with it.
+        if (!block || !block.isConnected) continue;
+        const size = textLength(block);
+        if (size > recircAllowance) continue;
+        block.remove();
+        recircAllowance -= size;
+    }
 
     // --- Generic: strip mid-article "Read: <other piece>" recirc cards ---
     // Publishers drop links to their own pieces between paragraphs: a card or
@@ -872,6 +1096,31 @@ const extractArticleFromPage = () => {
             }
         } catch (e) {}
     }
+    // 1b. schema.org microdata — structured per-article like JSON-LD, so it
+    // outranks <meta name="author">, which Blogger templates (e.g.
+    // thehackernews.com) fill with the outlet name. Accepts
+    // <meta itemprop="author" content="…"> or an itemprop="author" item with
+    // a nested itemprop="name". Authors of an Article item are preferred, so a
+    // comment or review item's author doesn't win.
+    if (!metadata.author) {
+        const microdataAuthor = (el) => {
+            const nameEl = el.hasAttribute('itemscope') ? el.querySelector('[itemprop~="name"]') : null;
+            const src = nameEl || (el.hasAttribute('content') ? el : null);
+            if (!src) return null;
+            const val = (src.getAttribute('content') || src.textContent || '').trim();
+            return val && val.length < 100 ? val : null;
+        };
+        let fallback = null;
+        for (const el of doc.querySelectorAll('[itemprop~="author"]')) {
+            const name = microdataAuthor(el);
+            if (!name) continue;
+            const owner = el.parentElement && el.parentElement.closest('[itemscope]');
+            const ownerType = (owner && owner.getAttribute('itemtype')) || '';
+            if (/(Article|BlogPosting|Report)\b/i.test(ownerType)) { metadata.author = name; break; }
+            if (!fallback) fallback = name;
+        }
+        if (!metadata.author && fallback) metadata.author = fallback;
+    }
     // 2. Meta tags
     if (!metadata.author) {
         for (const name of ['author', 'article:author', 'og:article:author']) {
@@ -913,6 +1162,20 @@ const extractArticleFromPage = () => {
                 const iso = parseToIso(val.trim());
                 if (iso) { metadata.publishedAt = iso; break; }
             }
+        }
+    }
+    // 2b. schema.org microdata — some templates (e.g. Blogger, as used by
+    // thehackernews.com) carry the date only as
+    // <meta itemprop="datePublished" content="…">, with no JSON-LD, OG meta
+    // or <time> backing it.
+    if (!metadata.publishedAt) {
+        for (const prop of ['datePublished', 'dateCreated', 'dateModified']) {
+            for (const el of doc.querySelectorAll(`[itemprop~="${prop}"]`)) {
+                const val = el.getAttribute('content') || el.getAttribute('datetime') || el.textContent;
+                const iso = val && parseToIso(val.trim());
+                if (iso) { metadata.publishedAt = iso; break; }
+            }
+            if (metadata.publishedAt) break;
         }
     }
     // 3. <article> element data-* attributes
@@ -959,10 +1222,162 @@ const extractArticleFromPage = () => {
         if (iso) metadata.publishedAt = iso;
     }
 
+    // --- Extract headline ---
+    // The tab title is <title>, which on most news sites is the headline plus
+    // the outlet ("<headline> - The New York Times") and sometimes an SEO
+    // kicker the page itself never shows ("Opinion | <headline> - ..."). Neither
+    // belongs in a wallabag entry's title.
+    //
+    // Conservative by construction: a shorter form is only emitted when a
+    // *detected* publisher name sits in a boundary segment, or when a second
+    // source on the page corroborates it. With no such evidence the title goes
+    // out exactly as <title> had it — there is no generic "split on the first
+    // dash and keep the longer half" rule, because a wrong title is worse than
+    // an ugly one and plenty of real headlines contain " - ", " | " or ":".
+    try {
+        const squashWs = (s) => (s || '').replace(/\s+/g, ' ').trim();
+
+        // Compare on letters and digits alone, so that "The New York Times",
+        // "the new york times" and hostname-derived "newyorktimes" are one key,
+        // and curly vs straight quotes and en vs em dashes never matter.
+        const normKey = (s) => (s || '')
+            .toLowerCase()
+            .normalize('NFKD')
+            .replace(/[̀-ͯ]/g, '')
+            .replace(/^the\s+/, '')
+            .replace(/[^a-z0-9]/g, '');
+
+        // A site name may appear with one generic tail word appended, so
+        // og:site_name "BBC" still matches a "- BBC News" suffix. Nothing
+        // looser than that: no prefix matching, no substring. Whole-segment
+        // equality is what keeps "The New York Times Sues OpenAI - The New York
+        // Times" from losing its subject along with its suffix.
+        const SITE_TAIL_WORDS = ['news', 'online', 'com', 'magazine', 'media', 'network'];
+        const siteKeys = titleSources.siteNames
+            .map(s => ({ key: normKey(s.name), explicit: s.explicit }))
+            .filter(s => s.key);
+        const matchSiteName = (segment) => {
+            const key = normKey(segment);
+            if (!key) return null;
+            for (const site of siteKeys) {
+                if (key === site.key) return site;
+                if (SITE_TAIL_WORDS.some(word => key === site.key + word)) return site;
+            }
+            return null;
+        };
+        const isSiteName = (segment) => matchSiteName(segment) !== null;
+
+        // Whitespace is required on both sides of every separator, which is
+        // what makes "Rethinking 20th-century art" and "Analysis: Inflation Is
+        // Cooling" immune to this entirely. The group is captured so that
+        // interior separators come back verbatim on rejoin.
+        const SEPARATORS = /(\s+[-–—|•·]\s+|\s+::\s+|\s+:\s+)/;
+        const desuffix = (title) => {
+            const original = squashWs(title);
+            let parts = original.split(SEPARATORS);
+            for (let pass = 0; pass < 2; pass++) {
+                if (parts.length < 3) break;
+                if (isSiteName(parts[parts.length - 1])) { parts = parts.slice(0, -2); continue; }
+                const leading = matchSiteName(parts[0]);
+                if (leading && leading.explicit && parts[0].length <= 30) { parts = parts.slice(2); continue; }
+                break;
+            }
+            const result = squashWs(parts.join(''));
+            // A strip that eats most of the title was not a suffix strip — it
+            // was a section page ("Politics | The New Yorker") or a site whose
+            // name is most of its own headline. Keep the title whole.
+            if (!result || result.length < original.length * 0.4) return original;
+            return result;
+        };
+
+        // Same text, or one contains the other and they are close enough in
+        // length that the shorter is the headline rather than a fragment of it.
+        const agree = (a, b) => {
+            const na = normKey(a);
+            const nb = normKey(b);
+            if (!na || !nb) return false;
+            if (na === nb) return true;
+            if (!na.includes(nb) && !nb.includes(na)) return false;
+            return Math.min(na.length, nb.length) / Math.max(na.length, nb.length) >= 0.6;
+        };
+
+        const docTitleStripped = desuffix(titleSources.docTitle);
+
+        // One <h1> only. Sites ship mobile/desktop duplicates of the same
+        // heading (identical text, harmless) but also section and logo
+        // headings; if two genuinely different ones survive and <title> does
+        // not settle which is the article's, give up on the <h1> entirely.
+        let h1Candidate = '';
+        const h1Distinct = [];
+        for (const text of titleSources.h1Texts) {
+            if (text.length < 5 || isSiteName(text)) continue;
+            if (!h1Distinct.some(seen => normKey(seen) === normKey(text))) h1Distinct.push(text);
+        }
+        if (h1Distinct.length === 1) {
+            h1Candidate = h1Distinct[0];
+        } else if (h1Distinct.length > 1) {
+            const corroborated = h1Distinct.filter(t => agree(t, titleSources.docTitle) || agree(t, docTitleStripped));
+            if (corroborated.length === 1) h1Candidate = corroborated[0];
+        }
+
+        // JSON-LD headline is the field Google documented at 110 characters, so
+        // a good number of CMSes hard-truncate it there. Only test candidates
+        // long enough to be in that zone — a genuinely short headline is a
+        // prefix of <title> by design, not by truncation.
+        // Candidates are tracked by source, not by text: two sources carrying
+        // the identical string is the strongest corroboration there is, and
+        // comparing by value would have them cancel each other out.
+        const candidates = [
+            { source: 'h1', text: h1Candidate },
+            { source: 'ld', text: titleSources.ldHeadline },
+            { source: 'og', text: titleSources.ogTitle },
+            { source: 'tw', text: titleSources.twTitle },
+            { source: 'doc', text: titleSources.docTitle }
+        ].filter(c => c.text);
+        const isTruncated = (candidate) => {
+            if (/(…|\.\.\.)$/.test(candidate.text)) return true;
+            if (candidate.text.length < 95) return false;
+            const key = normKey(candidate.text);
+            return candidates.some(other => {
+                if (other.source === candidate.source) return false;
+                const otherKey = normKey(desuffix(other.text));
+                return otherKey !== key && otherKey.startsWith(key);
+            });
+        };
+
+        // A candidate has to be backed by something else on the page: <title>
+        // itself, or another source. Cross-source agreement is what lets a
+        // headline that <title> never matched win, without ever trusting a
+        // single unverified string.
+        const corroborators = candidates.filter(c => c.source === 'h1' || c.source === 'ld' || c.source === 'og');
+        const accept = (candidate) => {
+            if (candidate.source === 'doc') return true;
+            if (agree(candidate.text, titleSources.docTitle) || agree(candidate.text, docTitleStripped)) return true;
+            return corroborators.some(other => other.source !== candidate.source && agree(candidate.text, other.text));
+        };
+
+        // The <h1> outranks JSON-LD deliberately. Once it has proved itself
+        // against the other sources it is the literal on-page headline, and it
+        // comes without the SEO kickers that no suffix rule could strip: NYT's
+        // "Opinion | Why the Census Matters - The New York Times" has
+        // <h1>Why the Census Matters</h1>, and "Opinion" is not a site name.
+        for (const candidate of candidates) {
+            if (isSiteName(candidate.text) || isTruncated(candidate) || !accept(candidate)) continue;
+            const result = desuffix(candidate.text);
+            if (result.length < 5 || result.length > 300 || !/[a-z]/i.test(result)) continue;
+            metadata.title = result;
+            break;
+        }
+    } catch (e) {}
+    // A NewsNation story goes out as its <article> alone (see above), keeping
+    // <head> for the og:image wallabag uses as the preview picture and for
+    // the JSON-LD graby reads.
     const payload = {
         wallabagSaveArticleContent: dispatchBody
             ? dispatchBody.innerHTML
-            : window.document.documentElement.innerHTML,
+            : newsNationArticle
+                ? `${doc.head.outerHTML}<body>${newsNationArticle.outerHTML}</body>`
+                : window.document.documentElement.innerHTML,
         wallabagMetadata: metadata
     };
 

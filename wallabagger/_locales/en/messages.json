@@ -251,6 +251,14 @@
       "description": "Options",
       "message": "Whitelist"
    },
+   "Sites_send_url_only_explaination": {
+      "description": "Options",
+      "message": "Enter the address of a website for which you want wallabag to fetch the page itself from its URL instead of receiving the browser content."
+   },
+   "Sites_send_url_only_title": {
+      "description": "Options",
+      "message": "Exceptions"
+   },
    "Starred": {
       "description": "background",
       "message": "Starred"

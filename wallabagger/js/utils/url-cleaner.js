@@ -51,6 +51,34 @@ const DOMAIN_TRACKING_PARAM_NAMES = {
     'wsj.com': new Set(['mod'])
 };
 
+// Platform-scoped trackers: like the domain rules above, but for platforms that also
+// serve from custom domains, so the platform is recognized either by domain or by a
+// fingerprint of params that only it emits together. Names are lowercase.
+//
+// Substack email/share links carry publication_id/post_id (pure analytics - the post
+// is fully addressed by its /p/<slug> path), `r` (the sharer's referral code),
+// isFreemail, triedRedirect and showWelcomeOnShare. `r` is far too generic to strip
+// globally, hence the scoping. Substack's `token=` (paid-post email access) is left
+// alone on purpose.
+const PLATFORM_TRACKING_PARAMS = [
+    {
+        domains: ['substack.com'],
+        fingerprint: ['publication_id', 'post_id'],
+        params: new Set(['publication_id', 'post_id', 'r', 'isfreemail', 'triedredirect', 'showwelcomeonshare'])
+    }
+];
+
+function getPlatformTrackingParams (hostname, paramNames) {
+    const lowerNames = new Set(paramNames.map(name => name.toLowerCase()));
+    const matched = new Set();
+    PLATFORM_TRACKING_PARAMS
+        .filter(({ domains, fingerprint }) =>
+            domains.some(domain => isDomainMatch(hostname, domain)) ||
+            fingerprint.every(name => lowerNames.has(name)))
+        .forEach(({ params }) => params.forEach(name => matched.add(name)));
+    return matched;
+}
+
 function isTrackingParam (name) {
     const lower = name.toLowerCase();
     return TRACKING_PARAM_NAMES.has(lower) || TRACKING_PARAM_PREFIXES.some(prefix => lower.startsWith(prefix));
@@ -139,10 +167,12 @@ function stripTrackingParams (urlString) {
     }
 
     const entries = [...url.searchParams.entries()];
+    const platformParams = getPlatformTrackingParams(url.hostname, entries.map(([name]) => name));
     const isNamedTrackingParam = ([name, value]) =>
         isTrackingParam(name) ||
         isTrackingParamValue(name, value) ||
-        isDomainTrackingParam(url.hostname, name);
+        isDomainTrackingParam(url.hostname, name) ||
+        platformParams.has(name.toLowerCase());
     const hasNamedTrackingSignal = entries.some(isNamedTrackingParam);
 
     const isOpaqueTrackingValue = ([name, value]) =>

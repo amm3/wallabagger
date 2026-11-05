@@ -42,6 +42,7 @@ WallabagApi.prototype = {
         AutoAddSingleTag: false,
         ArchiveByDefault: false,
         sitesToFetchLocally: null,
+        sitesToSendUrlOnly: null,
         FetchLocallyByDefault: false,
         LlmProvider: 'disabled',
         LlmApiKey: '',
@@ -228,17 +229,15 @@ WallabagApi.prototype = {
         });
     },
 
+    // With "all websites" on, browser content is the default and sitesToSendUrlOnly lists
+    // the exceptions (sites where wallabag should fetch the URL itself). With it off, URL
+    // submission is the default and sitesToFetchLocally lists the exceptions.
     IsSiteToFetchLocally: function (pageUrl) {
+        const matches = (list) => !!list && list.split('\n').some(item => item && pageUrl.indexOf(item) === 0);
         if (this.data.FetchLocallyByDefault) {
-            return true;
+            return !matches(this.data.sitesToSendUrlOnly);
         }
-        if (!this.data.sitesToFetchLocally) {
-            return false;
-        }
-        const sites = this.data.sitesToFetchLocally.split('\n');
-        return sites.filter(function (item) {
-            return pageUrl.indexOf(item) === 0;
-        }).length > 0;
+        return matches(this.data.sitesToFetchLocally);
     },
 
     SavePage: function (options) {

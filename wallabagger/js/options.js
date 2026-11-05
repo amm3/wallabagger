@@ -26,6 +26,7 @@ class OptionsController {
         this.userLogin_ = document.getElementById('userlogin-input');
         this.userPassword_ = document.getElementById('userpassword-input');
         this.sitesToFetchLocallyEl = document.getElementById('sites-to-fetch-locally');
+        this.sitesToSendUrlOnlyEl = document.getElementById('sites-to-send-url-only');
         this.getAppTokenButton_ = document.getElementById('getapptoken-button');
         this.tokenLabel_ = document.getElementById('apitoken-label');
 
@@ -194,10 +195,20 @@ class OptionsController {
 
     fetchLocallyByDefaultClick (e) {
         Object.assign(this.data, { FetchLocallyByDefault: this.fetchLocallyByDefault.checked });
-        this.fetchLocallyByDefault.checked
-            ? this._hide(this.sitesToFetchLocallyEl)
-            : this._show(this.sitesToFetchLocallyEl);
+        this._updateSiteListsVisibility();
         this.port.postMessage({ request: 'setup-save', data: this.data });
+    }
+
+    // Only the exception list for the current default is relevant: sites to send browser
+    // content for when URLs are the default, sites to send the URL for when content is.
+    _updateSiteListsVisibility () {
+        if (this.fetchLocallyByDefault.checked) {
+            this._hide(this.sitesToFetchLocallyEl);
+            this._show(this.sitesToSendUrlOnlyEl);
+        } else {
+            this._show(this.sitesToFetchLocallyEl);
+            this._hide(this.sitesToSendUrlOnlyEl);
+        }
     }
 
     archiveByDefaultClick (e) {
@@ -585,10 +596,9 @@ class OptionsController {
         this.archiveByDefault.checked = this.data.ArchiveByDefault;
 
         this.fetchLocallyByDefault.checked = this.data.FetchLocallyByDefault;
-        if (this.data.FetchLocallyByDefault) {
-            this._hide(this.sitesToFetchLocallyEl);
-        }
-        this.setSitesToFetchLocallyUi();
+        this._updateSiteListsVisibility();
+        this.setSiteListUi('sites-to-fetch-locally', 'sitesToFetchLocally');
+        this.setSiteListUi('sites-to-send-url-only', 'sitesToSendUrlOnly');
 
         // LLM settings
         const provider = this.data.LlmProvider || 'disabled';
@@ -602,27 +612,30 @@ class OptionsController {
         this.llmOllamaApiKeyInput.value = this.data.LlmOllamaApiKey || '';
     }
 
-    setSitesToFetchLocallyUi () {
-        const inputElement = document.getElementById('sites-to-fetch-locally-add-input');
-        const listElement = document.getElementById('sites-to-fetch-locally-add-list');
-        const form = document.getElementById('sites-to-fetch-locally-add-form');
+    // Wires up one of the site-list forms. idPrefix names its elements
+    // (<idPrefix>-add-input/-add-list/-add-form); dataKey is the newline-separated
+    // setting it edits.
+    setSiteListUi (idPrefix, dataKey) {
+        const inputElement = document.getElementById(`${idPrefix}-add-input`);
+        const listElement = document.getElementById(`${idPrefix}-add-list`);
+        const form = document.getElementById(`${idPrefix}-add-form`);
 
         form.addEventListener('submit', function (event) {
             event.preventDefault();
             const sites = getSites();
             const siteToAdd = (new URL(inputElement.value)).origin;
             sites.add(siteToAdd);
-            Object.assign(this.data, { sitesToFetchLocally: [...sites].join('\n') });
+            Object.assign(this.data, { [dataKey]: [...sites].join('\n') });
             setList(listElement, siteToAdd);
             inputElement.value = '';
             this.port.postMessage({ request: 'setup-save', data: this.data });
         }.bind(this));
 
         const getSites = () => {
-            if (!this.data.sitesToFetchLocally) {
+            if (!this.data[dataKey]) {
                 return new Set();
             }
-            return new Set(this.data.sitesToFetchLocally.split('\n'));
+            return new Set(this.data[dataKey].split('\n'));
         };
 
         const setList = (listElement, lastItemAdded) => {
@@ -654,7 +667,7 @@ class OptionsController {
             removeButton.addEventListener('click', function () {
                 const sites = getSites();
                 sites.delete(itemElement.dataset.url);
-                Object.assign(this.data, { sitesToFetchLocally: [...sites].join('\n') });
+                Object.assign(this.data, { [dataKey]: [...sites].join('\n') });
                 setList(listElement, inputElement.value);
                 this.port.postMessage({ request: 'setup-save', data: this.data });
             }.bind(this));
