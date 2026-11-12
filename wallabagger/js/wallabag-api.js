@@ -43,6 +43,7 @@ WallabagApi.prototype = {
         ArchiveByDefault: false,
         sitesToFetchLocally: null,
         sitesToSendUrlOnly: null,
+        sitesNeverSave: null,
         FetchLocallyByDefault: false,
         LlmProvider: 'disabled',
         LlmApiKey: '',

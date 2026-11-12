@@ -31,6 +31,10 @@
       "description": "Options",
       "message": "Auto add single tag"
    },
+   "Blocked_pages_can_t_be_stored": {
+      "description": "Popup",
+      "message": "This site is on your never-save list"
+   },
    "Cancel": {
       "description": "Popup",
       "message": "Cancel"
@@ -250,6 +254,14 @@
    "Sites_locally_whitelist_fetch_title": {
       "description": "Options",
       "message": "Whitelist"
+   },
+   "Sites_never_save_explaination": {
+      "description": "Options",
+      "message": "Pages whose address starts with one of these entries are never sent to wallabag, not even to check whether they are already saved. Use * to match anything, e.g. *.example.com or https://example.com/account/*. An entry without http:// or https:// matches both."
+   },
+   "Sites_never_save_title": {
+      "description": "Options",
+      "message": "Never save"
    },
    "Sites_send_url_only_explaination": {
       "description": "Options",

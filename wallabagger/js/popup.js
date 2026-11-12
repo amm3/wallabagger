@@ -40,6 +40,7 @@ PopupController.prototype = {
     errorToast: null,
     infoToast: null,
     apiUrl: null,
+    sitesNeverSave: null,
     entryUrl: null,
     cardTitle: null,
     cardImage: null,
@@ -550,6 +551,7 @@ PopupController.prototype = {
                 this.AllowSpaceInTags = msg.data.AllowSpaceInTags || 0;
                 this.AutoAddSingleTag = msg.data.AutoAddSingleTag || 0;
                 this.apiUrl = msg.data.Url;
+                this.sitesNeverSave = msg.data.sitesNeverSave;
                 this.afterSetup();
                 break;
             case 'articleTags':
@@ -617,6 +619,10 @@ PopupController.prototype = {
         this.browserUtils.getActiveTab().then(tab => {
             if (this.browserUtils.isServicePage(tab.url, this.apiUrl)) {
                 this.showError(Common.translate('Service_pages_can_t_be_stored'));
+                return;
+            }
+            if (this.browserUtils.isBlockedPage(tab.url, this.sitesNeverSave)) {
+                this.showError(Common.translate('Blocked_pages_can_t_be_stored'));
                 return;
             }
             this.tabUrl = tab.url;

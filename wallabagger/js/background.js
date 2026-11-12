@@ -75,9 +75,15 @@ if (isBetaVersion) {
 // which is what fails on paywalled or JS-rendered articles. Both gestures grant activeTab,
 // which is the only page access this extension has (the manifest declares no host
 // permissions), so the same injection works from here.
+// The wallabag server's own pages, non-http(s) pages and the user's "never save" list.
+const isNeverSavePage = (url) =>
+    browserUtils.isServicePage(url, api.data.Url) || browserUtils.isBlockedPage(url, api.data.sitesNeverSave);
+
 const saveTabWithLocalContent = async (tab, url, resetIcon) => {
-    const canInject = tab && typeof tab.id === 'number' && tab.id >= 0 &&
-        !browserUtils.isServicePage(url, api.data.Url) && !browserUtils.isRestrictedPage(url);
+    if (isNeverSavePage(url)) {
+        return;
+    }
+    const canInject = tab && typeof tab.id === 'number' && tab.id >= 0 && !browserUtils.isRestrictedPage(url);
     if (canInject) {
         try {
             const injections = await browser.scripting.executeScript({
@@ -583,11 +589,12 @@ function moveToDirtyCache (url) {
 }
 
 async function savePageToWallabag (dirtyUrl, resetIcon, title, content, author, publishedAt) {
-    if (browserUtils.isServicePage(dirtyUrl, api.data.Url)) {
+    // Init first so the never-save list is loaded even if the worker has just woken up.
+    await api.forceInit();
+    if (isNeverSavePage(dirtyUrl)) {
         return;
     }
     const url = stripTrackingParams(dirtyUrl);
-    await api.forceInit();
     if (api.checkParams() === false) {
         openOptionsPage();
         return false;
@@ -783,7 +790,7 @@ async function applyTwitterHeadline (savedEntry, content, url) {
 }
 
 const checkExist = (dirtyUrl) => {
-    if (browserUtils.isServicePage(dirtyUrl, api.data.Url)) { return; }
+    if (isNeverSavePage(dirtyUrl)) { return; }
     const url = stripTrackingParams(dirtyUrl.split('#')[0]);
     if (existCache.check(url)) {
         const existsFlag = existCache.get(url);

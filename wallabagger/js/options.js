@@ -599,6 +599,8 @@ class OptionsController {
         this._updateSiteListsVisibility();
         this.setSiteListUi('sites-to-fetch-locally', 'sitesToFetchLocally');
         this.setSiteListUi('sites-to-send-url-only', 'sitesToSendUrlOnly');
+        // Kept as typed: the path and * wildcards matter here, unlike the origin-only lists.
+        this.setSiteListUi('sites-never-save', 'sitesNeverSave', value => value.trim());
 
         // LLM settings
         const provider = this.data.LlmProvider || 'disabled';
@@ -614,8 +616,8 @@ class OptionsController {
 
     // Wires up one of the site-list forms. idPrefix names its elements
     // (<idPrefix>-add-input/-add-list/-add-form); dataKey is the newline-separated
-    // setting it edits.
-    setSiteListUi (idPrefix, dataKey) {
+    // setting it edits; normalize turns the typed value into the stored entry.
+    setSiteListUi (idPrefix, dataKey, normalize = value => (new URL(value)).origin) {
         const inputElement = document.getElementById(`${idPrefix}-add-input`);
         const listElement = document.getElementById(`${idPrefix}-add-list`);
         const form = document.getElementById(`${idPrefix}-add-form`);
@@ -623,7 +625,10 @@ class OptionsController {
         form.addEventListener('submit', function (event) {
             event.preventDefault();
             const sites = getSites();
-            const siteToAdd = (new URL(inputElement.value)).origin;
+            const siteToAdd = normalize(inputElement.value);
+            if (!siteToAdd) {
+                return;
+            }
             sites.add(siteToAdd);
             Object.assign(this.data, { [dataKey]: [...sites].join('\n') });
             setList(listElement, siteToAdd);

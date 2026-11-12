@@ -289,6 +289,18 @@
                     <ol id="sites-to-send-url-only-add-list" class="sites-list"></ol>
                 </div>
 
+                <h3 data-i18n="Sites_never_save_title">Never save</h3>
+                <div id="sites-never-save" class="form-group">
+                    <p data-i18n="Sites_never_save_explaination">Pages whose address starts with one of these entries are never sent to wallabag, not even to check whether they are already saved. Use * to match anything, e.g. *.example.com or https://example.com/account/*. An entry without http:// or https:// matches both.</p>
+                    <form action="." id="sites-never-save-add-form">
+                        <div class="input-group input-group--sites">
+                            <input type="text" id="sites-never-save-add-input" class="form-input" autocomplete="off" spellcheck="false" placeholder="*.example.com" required />
+                            <button class="btn input-group-btn" data-i18n-attr="title|Add_site">+</button>
+                        </div>
+                    </form>
+                    <ol id="sites-never-save-add-list" class="sites-list"></ol>
+                </div>
+
                 <h3 data-i18n="Tags">Tags</h3>
 
                 <div class="form-group">

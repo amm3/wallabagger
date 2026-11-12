@@ -33,6 +33,26 @@ class BrowserUtils {
         return isServicePageResult;
     };
 
+    // patterns is the newline-separated "never save" setting. Each line is a URL prefix
+    // in which * matches anything; a line without a scheme matches any scheme, so
+    // "*.example.com" covers every subdomain over http and https.
+    isBlockedPage (url, patterns) {
+        const matchedPattern = (patterns || '').split('\n')
+            .map(pattern => pattern.trim())
+            .filter(pattern => pattern.length > 0)
+            .find(pattern => {
+                const withScheme = pattern.includes('://') ? pattern : `*://${pattern}`;
+                const source = withScheme
+                    .split('*')
+                    .map(part => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
+                    .join('.*');
+                return new RegExp('^' + source, 'i').test(url);
+            });
+        const isBlockedPageResult = matchedPattern !== undefined;
+        this.#logger.log('isBlockedPage', { matchedPattern, isBlockedPageResult });
+        return isBlockedPageResult;
+    };
+
     isRestrictedPage (url) {
         const restrictedPages = globalThis.wallabaggerBrowser === 'Firefox'
             ? this.#firefoxRestrictedPages
